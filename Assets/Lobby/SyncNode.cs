@@ -12,6 +12,7 @@ public struct RuneSync {
     public RuneLight[] blades_light;
     public bool center_light;
     public int idx_target;
+    public Activation activ;
 }
 
 public struct OutpostSync {

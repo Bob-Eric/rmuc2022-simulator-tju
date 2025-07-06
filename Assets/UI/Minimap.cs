@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Mirror;
+using System.ComponentModel.Design;
 
 
 namespace RMUC_UI {
@@ -65,33 +66,20 @@ namespace RMUC_UI {
                     }
                 }
             }
-
-            switch (activ) {
-                case Activation.Idle:
-                    if (last_activ == activ)
-                        break;
-                    foreach (Image tmp in imgs_rune)
-                        tmp.gameObject.SetActive(false);
-                    imgs_rune[0].gameObject.SetActive(true);
-                    break;
-                case Activation.Ready: // same as Activation.Hitting
-                case Activation.Hitting:
-                    if (last_activ != activ) {
-                        foreach (Image tmp in imgs_rune)
-                            tmp.gameObject.SetActive(false);
-                        imgs_rune[1].gameObject.SetActive(true);
-                    }
-                    imgs_rune[1].rectTransform.Rotate(Vector3.forward, Time.deltaTime * 60); // spin by 60 deg/s
-                    break;
-                case Activation.Activated:
-                    if (last_activ == activ) // according to rule, armor_color won't change suddenly
-                        break;
-                    foreach (Image tmp in imgs_rune)
-                        tmp.gameObject.SetActive(false);
-                    imgs_rune[2 + (int)rune_color].gameObject.SetActive(true);
-                    break;
+            if (activ == Activation.Idle) {
+                foreach (Image tmp in imgs_rune)
+                    tmp.gameObject.SetActive(false);
+                imgs_rune[0].gameObject.SetActive(true);
+            } else if (activ == Activation.Ready || activ == Activation.Hitting) {
+                foreach (Image tmp in imgs_rune)
+                    tmp.gameObject.SetActive(false);
+                imgs_rune[1].gameObject.SetActive(true);
+                imgs_rune[1].rectTransform.Rotate(Vector3.forward, Time.deltaTime * 60); // spin by 60 deg/s
+            } else {
+                foreach (Image tmp in imgs_rune)
+                    tmp.gameObject.SetActive(false);
+                imgs_rune[2 + (int)rune_color].gameObject.SetActive(true);
             }
-            last_activ = activ;
         }
 
 

@@ -152,6 +152,7 @@ public class RuneState : BasicState {
         for (int i = 0; i < blades.Count; i++)
             tmp.blades_light[i] = blades[i].blade_light;
         tmp.idx_target = activate_state == Activation.Hitting ? this.idx_target : -1;
+        tmp.activ = BattleField.singleton.rune.activ;
         return tmp;
     }
 
@@ -162,5 +163,6 @@ public class RuneState : BasicState {
             blades[i].SetBladeLight(rune_sync.blades_light[i]);
         }
         this.idx_target = rune_sync.idx_target;
+        BattleField.singleton.rune.activ = rune_sync.activ;
     }
 }
