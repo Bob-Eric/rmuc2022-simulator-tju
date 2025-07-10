@@ -3502,7 +3502,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3958,7 +3958,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4876,7 +4876,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5254,7 +5254,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8877,7 +8877,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -11013,7 +11013,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -11778,7 +11778,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -18277,7 +18277,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -19917,7 +19917,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -21154,7 +21154,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -22347,7 +22347,6 @@ GameObject:
   - component: {fileID: 7820019639325457555}
   - component: {fileID: 8033734407869558295}
   - component: {fileID: 400643570774499575}
-  - component: {fileID: 7473223740850331802}
   m_Layer: 3
   m_Name: Outpost
   m_TagString: Untagged
@@ -22396,7 +22395,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a739b97ecba220e49bd605699a812000, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  armor_color: 1
+  armor_color: 0
   expval: 0
   blood_bars:
   - {fileID: 2034641610143268920}
@@ -22407,19 +22406,6 @@ MonoBehaviour:
   currblood: 0
   buff_active: 1
   invul: 0
---- !u!114 &7473223740850331802
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8033734407869558294}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94cec49d4d6543b45818c69d6e4dab3f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mat: {fileID: -2041566104613822330, guid: c419c706935de414da54c7c1ad5867b1, type: 3}
 --- !u!1 &8058749236977963559
 GameObject:
   m_ObjectHideFlags: 0
@@ -25557,7 +25543,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+  - {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -25762,7 +25748,7 @@ PrefabInstance:
     - target: {fileID: 3096573029273748082, guid: a35ec0cae32a9f647ad651c48ea7d137, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+      objectReference: {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
     - target: {fileID: 3096573029303114762, guid: a35ec0cae32a9f647ad651c48ea7d137, type: 3}
       propertyPath: m_Layer
       value: 3
@@ -25774,7 +25760,7 @@ PrefabInstance:
     - target: {fileID: 3096573029317759678, guid: a35ec0cae32a9f647ad651c48ea7d137, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+      objectReference: {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
     - target: {fileID: 3096573029554874943, guid: a35ec0cae32a9f647ad651c48ea7d137, type: 3}
       propertyPath: m_Layer
       value: 3
@@ -25830,7 +25816,7 @@ PrefabInstance:
     - target: {fileID: 3096573030534909215, guid: a35ec0cae32a9f647ad651c48ea7d137, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
+      objectReference: {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
     - target: {fileID: 3096573030562016500, guid: a35ec0cae32a9f647ad651c48ea7d137, type: 3}
       propertyPath: m_Name
       value: triangle armor

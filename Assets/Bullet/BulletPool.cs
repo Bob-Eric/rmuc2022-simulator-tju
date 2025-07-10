@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 /* Singleton */
 public class BulletPool : MonoBehaviour {
@@ -82,9 +83,11 @@ public class BulletPool : MonoBehaviour {
         /// if bullet is not on field, then it will be recycled
         bullet.SetActive(false);
         if (is_small) {
+            Assert.IsTrue(smallbullet_busy.Contains(bullet), "BulletPool: RemoveBullet: small bullet not in busy set");
             smallbullet_busy.Remove(bullet);
             smallbullet_idle.Add(bullet);
         } else {
+            Assert.IsTrue(bigbullet_busy.Contains(bullet), "BulletPool: RemoveBullet: big bullet not in busy set");
             bigbullet_busy.Remove(bullet);
             bigbullet_idle.Add(bullet);
         }

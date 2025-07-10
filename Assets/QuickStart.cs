@@ -16,6 +16,7 @@ public class QuickStart : MonoBehaviour {
             BattleNetworkManager.singleton.playerSyncs.Add(new PlayerSync(0, "admin", true, robot.name, true));
             BattleNetworkManager.singleton.ServerChangeScene("BattleField");
         }
+        GameSetting.singleton.prepare_sec = 0;
     }
 
     void Update() {

@@ -7,15 +7,15 @@ using Mirror;
 /* code will be executed in editor, therefore, component will be added to object persistantly */
 [ExecuteInEditMode]
 public class Traverse : MonoBehaviour {
-    public Material mat;
     // Start is called before the first frame update
     void Start() {
         Transform[] allchildren = GetComponentsInChildren<Transform>();
+        Debug.Log("Traverse: " + allchildren.Length + " children found in " + this.gameObject.name);
         foreach (Transform child in allchildren) {
             // AddMC(child);
             // ResetConvex(child);
             // DeleteMC(child);
-            ReplaceMaterial(child, mat);
+            ReplaceMaterial(child);
             // DeleteNI(child);
             // ReplaceMesh(child);
         }
@@ -60,21 +60,20 @@ public class Traverse : MonoBehaviour {
         }
     }
 
-    void ReplaceMaterial(Transform child, Material new_mat) {
+    void ReplaceMaterial(Transform child) {
         Renderer tmp = child.GetComponent<MeshRenderer>();
         if (tmp == null)
             return;
         // if (tmp.sharedMaterial == AssetManager.singleton.light_blue)
         // if (child.name.Contains("轨") && !child.name.Contains("板"))
-        Debug.Log(tmp.gameObject.name);
+        // Debug.Log(tmp.gameObject.name);
         if (tmp.sharedMaterial == null) {
             DestroyImmediate(tmp);
             return;
         }
-        if (tmp.sharedMaterial.name.Contains("Material_28"))
-        {
+        if (tmp.sharedMaterial == AssetManager.singleton.light_red) {
             Debug.Log("replace");
-            tmp.sharedMaterial = new_mat;
+            tmp.sharedMaterial = AssetManager.singleton.light_blue;
         }
     }
 
