@@ -1,4 +1,7 @@
 /*
 !Assets/
 !Packages/
-!README.assets/
+!README*
+!LICENSE
+!omnisharp.json
+!.gitignore
