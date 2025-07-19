@@ -1,33 +1,46 @@
-/// <summary>
-/// BuffManager.cs belongs to Game Logic; should only run in server PC
-/// </summary>
+/* BuffManager.cs belongs to Game Logic; should only run in server PC.
+
+    PIPELINE:
+        1. BuffManager detects collision and enables corresponding Buff by collider name.
+        2. BuffManager polls the dictionary in FixedUpdate() and calls Buff.Update().
+        3. Buff.Update() add/remove values in RoboState's buff lists.
+        4. RoboState's runtime params are updated according to the buff lists.
+*/
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-// using Mirror;
+
 
 /* use abstract class and function to provide general calling form */
 public abstract class Buff {
     public string tag;
-    /* make sure Update() is called in FixedUpdate() */
+
+    /// <summary>
+    /// Update this buff. It Should only be called in FixedUpdate().
+    /// </summary>
     public abstract void Update();
-    /* Note: Enable() may be called every frame. Make sure list.Add() won't be called multiple times */
+
+    /// <summary>
+    /// Enable this buff on the robot. May be called even if the buff is already enabled.
+    /// </summary>
     public virtual void Enable(Collider collider) {
+        // check en to avoid multiple times of adding buff
         if (!en) {
             robot.robo_buff.Add(this);
-            AssetManager.singleton.PlayClipAtPoint(
-            AssetManager.singleton.buff_taken, robot.transform.position);
+            AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.buff_taken, robot.transform.position);
         }
         col = collider;
         timer = 2;
         en = true;
-
     }
+
     public virtual void init(RoboState robo_state, string my_color, string enemy_color) {
         robot = robo_state;
         my_color_s = my_color;
         enemy_color_s = enemy_color;
     }
+
     public virtual void Disable() {
         if (!en)
             return;
@@ -35,15 +48,18 @@ public abstract class Buff {
     }
     public float timer;
     public bool en;
+
+    /* runtime variables that Buff.Update() may use */
     protected RoboState robot;
     protected Collider col;
     protected string my_color_s;
     protected string enemy_color_s;
+
 }
 
 /* Buff of Revive 
     Note: engineer's self-reviving buff will not be considered here 
-    because it's designed to deal with ground buff
+    because this class is designed to deal with ground buff
 */
 public class B_Revive : Buff {
     float B_rev = 0.05f;
@@ -353,7 +369,7 @@ public class BuffType {
 }
 
 public class BuffManager : MonoBehaviour {
-    public static char sep = ' ';
+    public const char sep = ' ';
     private RoboState robot;
     private Dictionary<string, Buff> buffs;
 
@@ -386,11 +402,11 @@ public class BuffManager : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        foreach (Buff tmp in buffs.Values) {
-            tmp.Update();
-        }
+        foreach (Buff b in buffs.Values)
+            b.Update();
     }
 
+    /* Detect different buff respectively */
     void OnTriggerEnter(Collider col) {
         // Debug.Log("enter buff_uld: " + col.name);
         if (col.name.Contains(BuffType.run) && !buffs[BuffType.run].en) {
@@ -404,7 +420,6 @@ public class BuffManager : MonoBehaviour {
             }
         }
     }
-
     void OnTriggerStay(Collider col) {
         string prefix = col.name.Split(sep)[0];
         switch (prefix) {
@@ -462,7 +477,6 @@ public class BuffManager : MonoBehaviour {
                 break;
         }
     }
-
     void OnTriggerExit(Collider col) {
         char sep = ' ';
         string prefix = col.name.Split(sep)[0];

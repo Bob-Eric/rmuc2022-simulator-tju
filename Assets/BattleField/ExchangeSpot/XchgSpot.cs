@@ -45,13 +45,13 @@ public class XchgSpot : MonoBehaviour {
         }
     }
 
-
+    readonly WaitForSeconds _wait = new(0.1f);
     IEnumerator DetLightBlink() {
         for (int i = 0; i < 15; i++) {
             det_light.SetActive(false);
-            yield return new WaitForSeconds(0.1f);
+            yield return _wait;
             det_light.SetActive(true);
-            yield return new WaitForSeconds(0.1f);
+            yield return _wait;
         }
     }
 
@@ -59,9 +59,9 @@ public class XchgSpot : MonoBehaviour {
     IEnumerator CollLightBlink() {
         for (int i = 0; i < 10; i++) {
             coll_light.SetActive(false);
-            yield return new WaitForSeconds(0.1f);
+            yield return _wait;
             coll_light.SetActive(true);
-            yield return new WaitForSeconds(0.1f);
+            yield return _wait;
         }
     }
 }

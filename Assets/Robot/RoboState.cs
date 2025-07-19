@@ -25,25 +25,29 @@ public class RoboState : BasicState {
     public List<Buff> robo_buff = new List<Buff>();
 
     /* Buff */
-    /* damage = damage * (1 + hitter.B_atk) * max(1-hittee.B_dfc, 0) */
-    public float B_atk;
-    public float B_dfc;
-    /* heat -= cooldown * B_cd */
-    public float B_cd;
-    public float B_pow;
-    public float B_rev;
-    public int B_rbn; // B_reborn: 2 if supply_spot; 1 if recover_card or self-reviving of engineer 
 
-    public List<float> li_B_atk; // attack buff. Ex: rune_junior => B_atk.Add(0.5); rune_senior => B_atd.Add(1)
-    public List<float> li_B_dfc; // defence buff. Ex: rune_senior => B_dfc.Add(0.5)
-    public List<float> li_B_cd;
-    public List<float> li_B_rev;
+    /* damage = damage * (1 + hitter.B_atk) * max(1 - hittee.B_dfc, 0) */
+    public float B_atk; // B_atk: attack buff
+    public float B_dfc; // B_dfc: defence buff
+
+    public float B_cd;  // B_cd: cooldown multiplier, heat -= cooldown * B_cd
+    public float B_pow; // B_pow: one-shot chassis power from a successful leap
+    public float B_rev; // B_rev: percentage of maxblood to recover per second. 0.02 for engineer self-reviving, 0.05 for supply_spot reviving field.
+    public int B_rbn;   // B_rbn: type of reborn buff. 2 if supply_spot; 1 if revive-card or engineer self-reviving.
+
+    /* lists of buff on the robot.
+        For each list of buffs, only the highest will take effect at the same time.
+    */
+    public List<float> li_B_atk; // e.g. rune_junior => B_atk.Add(0.5); rune_senior => B_atd.Add(1)
+    public List<float> li_B_dfc; // e.g. rune_senior => B_dfc.Add(0.5)
+    public List<float> li_B_cd;  
+    public List<float> li_B_rev; 
     public List<int> li_B_rbn;
 
 
 
     /// <summary>
-    /// API
+    /// Get the sync data of this robot state. Called by syncnode in server PC only.
     /// </summary>
     public virtual RoboSync Pull() {
         RoboSync tmp = new RoboSync();
@@ -61,6 +65,9 @@ public class RoboState : BasicState {
     }
 
 
+    /// <summary>
+    /// Update this robot state with the sync data from server PC. Called by syncnode in client PC only.
+    /// </summary>
     public virtual void Push(RoboSync robo_sync) {
         if (!this.survival && robo_sync.bat_stat != BatStat.Dead) {
             Debug.Log(string.Format("{0} reborns", this.gameObject.name));
@@ -73,8 +80,6 @@ public class RoboState : BasicState {
             SetBloodBars();
             if (robo_sync.bat_stat == BatStat.Dead)
                 Die();
-            // else
-            //     StartCoroutine(this.ArmorsBlink(0.1f));
         }
         this.survival = robo_sync.bat_stat != BatStat.Dead;
         return;
@@ -102,9 +107,7 @@ public class RoboState : BasicState {
         foreach (ArmorController ac in acs)
             ac.Disable();
 
-        foreach (Buff tmp in this.robo_buff.ToArray()) {
-            tmp.Disable();
-        }
+        robo_buff.ForEach(buff => buff.Disable());
         UpdateBuff();
 
         DistribExp();
@@ -155,14 +158,15 @@ public class RoboState : BasicState {
     }
 
 
-    protected int rbn_req = 0;  // Every death will add 10 to rbn_req immediately.
-                                // When first died, rbn_req will be 10, 
-                                //  exactly what's needed for first reborn
+    // `rbn_req`: time to wait before reborn.
+    // rbn_req is 10 sec when robot first dies, and then 20, 30, ...
+    protected int rbn_req = 0;
+
     float timer_rev = 0f;
     int rbn = 0;
     // revive per second
     void Revive() {
-        if (this.survival) {
+        if (survival) {
             if (B_rev != 0 && Time.time - timer_rev > 1 && currblood < maxblood) {
                 currblood += Mathf.RoundToInt(maxblood * B_rev);
                 currblood = currblood < maxblood ? currblood : maxblood;
@@ -232,9 +236,8 @@ public class RoboState : BasicState {
             this.killer = hitter;
             Die();
             BattleField.singleton.Kill(hitter, this.gameObject);
-        } 
-        else
-           StartCoroutine(ArmorsBlink(0.1f));
+        } else
+            StartCoroutine(ArmorsBlink(0.1f));
 
         // SetBloodBars();
     }

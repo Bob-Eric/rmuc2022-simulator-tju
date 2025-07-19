@@ -13,9 +13,8 @@ public class EngineerState : RoboState {
     string rev_card_s;
 
 
-
     /// <summary>
-    /// API
+    /// Get the sync data of this engineer state. Called by syncnode in server PC only.
     /// </summary>
     public override RoboSync Pull() {
         RoboSync rs = base.Pull();
@@ -24,15 +23,21 @@ public class EngineerState : RoboState {
         rs.has_wpn = false;
         rs.has_level = false;
         return rs;
-    }       // called by syncnode
+    }
 
 
+    /// <summary>
+    /// Do engineer-specific clean-up when robot dies
+    /// </summary>
     public override void Die() {
         base.Die();
         ec.rev_card.name = "revive_card";
-    }       // called by weapon
+    }
 
 
+    /// <summary>
+    /// Do engineer-specific damage handling when any of robot's armor is hit.
+    /// </summary>
     public override void TakeDamage(GameObject hitter, GameObject armor_hit, GameObject bullet) {
         base.TakeDamage(hitter, armor_hit, bullet);
         if (reviving) {
@@ -40,13 +45,10 @@ public class EngineerState : RoboState {
             li_B_rev.Remove(0.02f);
             UpdateBuff();
         }
-        timer_hit = 0; 
-    }       // called by armorcontroller
+        timer_hit = 0;
+    }
 
 
-    /// <summary>
-    /// non-API
-    /// </summary>
     public override void Awake() {
         base.Awake();
         ec = GetComponent<EngineerController>();
@@ -56,12 +58,13 @@ public class EngineerState : RoboState {
     public override void Start() {
         base.Start();
 
+        // engineer can reborn automatically
         li_B_rbn.Add(1);
         UpdateBuff();
-
+        // rename revive card s.t. it can be recognized by BuffManager of other robots
         rev_card_s = BuffType.rev + BuffManager.sep + (armor_color == ArmorColor.Red ? "red" : "blue") + " card";
         ec.rev_card.name = rev_card_s;
-        
+
         rbn_req = 10;
     }
 
@@ -72,8 +75,9 @@ public class EngineerState : RoboState {
         base.Update();
 
         if (!BattleField.singleton.started_game)
-            return;        
+            return;
 
+        timer_hit += Time.deltaTime;
         if (timer_hit > interv_self_rev && !reviving) {
             reviving = true;
             li_B_rev.Add(0.02f);
@@ -90,9 +94,9 @@ public class EngineerState : RoboState {
 
     public override void Configure() {
         base.Configure();
-        /* Make sure init maxblood first because in Start(), maxblood is assigned to currblood */
+        /* Make sure init maxblood first because maxblood is assigned to currblood in Start() */
         this.maxblood = 500;
-        this.expval = AssetManager.singleton.exp["engineer"]["have"].ToObject<int>(); 
-        return ;
+        this.expval = AssetManager.singleton.exp["engineer"]["have"].ToObject<int>();
+        return;
     }
 }
