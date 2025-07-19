@@ -11676,8 +11676,8 @@ MonoBehaviour:
   expval: 0
   blood_bars:
   - {fileID: 7729989273104037439}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 6683778781020156773}
+  - {fileID: 325894096574556123}
   - {fileID: 5420125652424814425}
   - {fileID: 1136653284132106943}
   - {fileID: 2136401453664593928}

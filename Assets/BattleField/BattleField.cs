@@ -212,15 +212,14 @@ public class BattleField : MonoBehaviour {
         }
 
         RoboState rs1 = hitter.GetComponent<RoboState>();
-        BasicState rs2 = hitter.GetComponent<BasicState>();
+        BasicState rs2 = hittee.GetComponent<BasicState>();
         AudioClip ac = null;
         if (rs2 != null) {
             // teammate's killed
             if (rs2.armor_color == robo_local.armor_color) {
                 if (rs2 == robo_local) {
+                    AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.robo_die, robo_local.transform.position);
                     ac = AssetManager.singleton.self_die;
-                    AssetManager.singleton.PlayClipAtPoint(
-                        AssetManager.singleton.robo_die, robo_local.transform.position);
                 } else
                     ac = AssetManager.singleton.ally_die;
             }
@@ -230,11 +229,11 @@ public class BattleField : MonoBehaviour {
             // enemy's killed by teammate
             else {
                 if (!killnum.ContainsKey(rs1))
-                    killnum.Add(rs1, -1);
-                int cnt = killnum[rs1];
-                cnt = (cnt + 1) % AssetManager.singleton.kill.Length;
-                killnum[rs1] = cnt;
-                ac = AssetManager.singleton.kill[cnt];
+                    killnum.Add(rs1, 0);
+                else
+                    killnum[rs1]++;
+                int idx = killnum[rs1] % AssetManager.singleton.kill.Length;
+                ac = AssetManager.singleton.kill[idx];
             }
         } else
             Debug.Log("cannot get basicstate from hitter");
