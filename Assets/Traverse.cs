@@ -71,9 +71,9 @@ public class Traverse : MonoBehaviour {
             DestroyImmediate(tmp);
             return;
         }
-        if (tmp.sharedMaterial == AssetManager.singleton.light_red) {
+        if (tmp.sharedMaterial == AssetManager.singleton.light_blue) {
             Debug.Log("replace");
-            tmp.sharedMaterial = AssetManager.singleton.light_blue;
+            tmp.sharedMaterial = AssetManager.singleton.light_red;
         }
     }
 
