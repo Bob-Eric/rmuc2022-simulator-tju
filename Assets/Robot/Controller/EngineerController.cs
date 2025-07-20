@@ -81,9 +81,6 @@ public class EngineerController : BasicController {
             MovClaw();
             Catch();
             Save();
-        // used to debug mine exchanging
-        // if (Input.GetKeyDown(KeyCode.G))
-        //     BattleField.singleton.XchgMine(robo_state.armor_color, true);
         } else
             StopMove();
 
@@ -117,7 +114,6 @@ public class EngineerController : BasicController {
 
     const int wheel_num = 4;
     const float torque_drive = 8f;
-    const float torque_spin = 2f;
     PIDController chas_ctl = new PIDController(1, 0, 0);
     void Move() {
         if (cmd_lshift) {
@@ -198,30 +194,30 @@ public class EngineerController : BasicController {
     readonly Vector3 arm_end = new Vector3(-0.4f, 0, 0);
     readonly Vector3 claw_lt = new Vector3(-0.32f, 0.178f, 0.054f);
     readonly Vector3 claw_rt = new Vector3(-0.08f, 0.178f, 0.054f);
-    float rat_arm = 0;
-    float rat_claw = 0.5f;
-    int st_wrist = 0;
+    float ratio_arm = 0;
+    float ratio_claw = 0.5f;
+    int st_wrist = 0; // set wrist angle
     float ang = 0;
-    float rat_elev = 0f;
+    float ratio_elev = 0f;
     void MovClaw() {
         if (cmd_lshift) {
             /* elevate */
             if (cmd_E ^ cmd_Q)
-                rat_elev = Mathf.Clamp01(rat_elev + (cmd_E ? Time.deltaTime : -Time.deltaTime));
+                ratio_elev = Mathf.Clamp01(ratio_elev + (cmd_E ? Time.deltaTime : -Time.deltaTime));
             /* move arm */
-            rat_arm = Mathf.Clamp01(rat_arm + v * Time.deltaTime);
+            ratio_arm = Mathf.Clamp01(ratio_arm + v * Time.deltaTime);
             /* move wrist */
             if (cmd_Z ^ cmd_C)
-                st_wrist = st_wrist + (cmd_C ? 90 : -90);
+                st_wrist += cmd_C ? 90 : -90;
             /* move claw */
-            rat_claw = Mathf.Clamp01(rat_claw + h * Time.deltaTime);
+            ratio_claw = Mathf.Clamp01(ratio_claw + h * Time.deltaTime);
         }
-        elev_1st.localPosition = Vector3.Lerp(elev_1st_start, elev_1st_end, rat_elev);
-        elev_2nd.localPosition = Vector3.Lerp(elev_2nd_start, elev_2nd_end, rat_elev);
-        arm.localPosition = Vector3.Lerp(arm_start, arm_end, rat_arm);
+        elev_1st.localPosition = Vector3.Lerp(elev_1st_start, elev_1st_end, ratio_elev);
+        elev_2nd.localPosition = Vector3.Lerp(elev_2nd_start, elev_2nd_end, ratio_elev);
+        arm.localPosition = Vector3.Lerp(arm_start, arm_end, ratio_arm);
         ang -= 8 * Time.deltaTime * Mathf.DeltaAngle(st_wrist, ang);
         wrist.localEulerAngles = new Vector3(ang, 0, 0);
-        claw.localPosition = Vector3.Lerp(claw_lt, claw_rt, rat_claw);
+        claw.localPosition = Vector3.Lerp(claw_lt, claw_rt, ratio_claw);
     }
 
     
@@ -251,13 +247,13 @@ public class EngineerController : BasicController {
     readonly Vector3 card_start = new Vector3(0, 0.084f, 0.22f);
     readonly Vector3 card_end = new Vector3(0, 0.084f, 0.50f);
     bool saving = false;
-    float rat_rev = 0;
+    float ratio_rev = 0; // reach-out ratio of revive_card
     public void Save() {
         if (!cmd_lshift && cmd_R) {
             saving = !saving;
         }
-        rat_rev = Mathf.Clamp01(rat_rev + (saving ? Time.deltaTime : -Time.deltaTime));
-        rev_card.localPosition = Vector3.Lerp(card_start, card_end, rat_rev);
+        ratio_rev = Mathf.Clamp01(ratio_rev + (saving ? Time.deltaTime : -Time.deltaTime));
+        rev_card.localPosition = Vector3.Lerp(card_start, card_end, ratio_rev);
     }
 
 }
