@@ -43,11 +43,11 @@ namespace RMUC_UI {
         }
 
 
-        Activation last_activ;
         Image[] imgs_rune;
         Activation activ => BattleField.singleton.rune.activ;
         ArmorColor rune_color => BattleField.singleton.rune.rune_color;
         public void SetRune() {
+            // init
             if (imgs_rune == null) {
                 imgs_rune = new Image[4];
                 foreach (Image child in rune.GetComponentsInChildren<Image>(includeInactive: true)) {
@@ -66,6 +66,7 @@ namespace RMUC_UI {
                     }
                 }
             }
+            // update
             if (activ == Activation.Idle) {
                 foreach (Image tmp in imgs_rune)
                     tmp.gameObject.SetActive(false);
@@ -122,7 +123,7 @@ namespace RMUC_UI {
                 tmp.transform.SetParent(this.transform);
                 tmp.transform.localScale = 0.6f * Vector3.one;
                 RoboIcon ri = tmp.GetComponent<RoboIcon>();
-                ri.Reset(rs);
+                ri.Init(rs);
                 rbicns.Add(ri);
             }
         }

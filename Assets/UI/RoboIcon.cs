@@ -19,7 +19,7 @@ namespace RMUC_UI {
         Image img_arrow;
 
 
-        public void Reset(RoboState robo_conn) {
+        public void Init(RoboState robo_conn) {
             if (robo_conn == null) {
                 Destroy(this.gameObject);
                 return;
@@ -70,6 +70,7 @@ namespace RMUC_UI {
         }
 
 
+        Vector3 localrot = new Vector3(0, 0, 0);
         void SetArrow() {
             if (vel.magnitude < 0.1f) {
                 arrow.SetActive(false);
@@ -77,16 +78,19 @@ namespace RMUC_UI {
             } else
                 arrow.SetActive(true);
             float ang = Vector2.SignedAngle(Vector2.up, vel);
-            arrow.transform.localEulerAngles = new Vector3(0, 0, ang + 180);
+            localrot.z = ang + 180;
+            arrow.transform.localEulerAngles = localrot;
         }
 
 
+        
+        Vector3 localpos = new Vector3(0, 0, 0);
         void SetIconPos() {
-            // pos_map = (pos_real - origin_real) * map_scale + origin_map
-            // here, origin_real and origin_map are both zero
-            float pos_x = robo_conn.rigid.transform.position.x / BattleField.length * Minimap.length;
-            float pos_y = robo_conn.rigid.transform.position.z / BattleField.width * Minimap.width;
-            this.transform.localPosition = new Vector3(-pos_x, -pos_y, 0);
+            /* pos_map = (pos_real - origin_real) * map_scale + origin_map.
+                Here, origin_real and origin_map are both zero. */
+            localpos.x = - Minimap.length / BattleField.length * robo_conn.rigid.transform.position.x;
+            localpos.y = - Minimap.width / BattleField.width * robo_conn.rigid.transform.position.z;
+            transform.localPosition = localpos;
         }
     }
 } 

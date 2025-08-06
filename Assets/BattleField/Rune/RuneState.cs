@@ -145,8 +145,8 @@ public class RuneState : BasicState {
     }
 
 
+    RuneSync tmp = new RuneSync();
     public RuneSync Pull() {
-        RuneSync tmp = new RuneSync();
         tmp.center_light = this.center_light;
         tmp.blades_light = new RuneLight[blades.Count];
         for (int i = 0; i < blades.Count; i++)

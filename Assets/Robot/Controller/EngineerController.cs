@@ -2,6 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using System;
+
+public struct EngineerInput {
+    public bool cmd_C;
+    public bool cmd_Z;
+    public bool cmd_R;
+    public bool cmd_lshift;
+    public bool cmd_E;
+    public bool cmd_Q;
+    public bool braking;
+    public float h;
+    public float v;
+    public float mouseX;
+    public float mouseY;
+    public long t_send;
+};
 
 public class EngineerController : BasicController {
     [Header("Kinematic")]
@@ -28,17 +44,10 @@ public class EngineerController : BasicController {
 
 
     bool playing => Cursor.lockState == CursorLockMode.Locked;
-    bool cmd_C => playing && Input.GetKeyDown(KeyCode.C);
-    bool cmd_Z => playing && Input.GetKeyDown(KeyCode.Z);
-    bool cmd_R => playing && Input.GetKeyDown(KeyCode.R);
-    bool cmd_lshift => playing && Input.GetKey(KeyCode.LeftShift);
-    bool cmd_E => playing && Input.GetKey(KeyCode.E);
-    bool cmd_Q => playing && Input.GetKey(KeyCode.Q);
-    bool braking => playing && Input.GetKey(KeyCode.X);
-    float h => playing ? Input.GetAxis("Horizontal") : 0;
-    float v => playing ? Input.GetAxis("Vertical") : 0;
-    float mouseX => playing ? 2 * Input.GetAxis("Mouse X") : 0;
-    float mouseY => playing ? 2 * Input.GetAxis("Mouse Y") : 0;
+    bool cmd_C, cmd_Z, cmd_R, cmd_lshift, cmd_E, cmd_Q;
+    bool braking;
+    float h, v;
+    float mouseX, mouseY;
 
     /// <summary>
     /// non-API
@@ -70,11 +79,19 @@ public class EngineerController : BasicController {
         }
     }
 
-
-    void Update() {
-        if (!isOwned)
-            return;
-
+    [Command]
+    void CmdInput(EngineerInput ei) {
+        cmd_C = ei.cmd_C;
+        cmd_Z = ei.cmd_Z;
+        cmd_R = ei.cmd_R;
+        cmd_lshift = ei.cmd_lshift;
+        cmd_E = ei.cmd_E;
+        cmd_Q = ei.cmd_Q;
+        braking = ei.braking;
+        h = ei.h;
+        v = ei.v;
+        mouseX = ei.mouseX;
+        mouseY = ei.mouseY;
         if (robo_state.survival) {
             Move();
             Look();
@@ -83,8 +100,29 @@ public class EngineerController : BasicController {
             Save();
         } else
             StopMove();
+    }
 
-        UpdateSelfUI();
+    EngineerInput _ei = new EngineerInput();
+    void Update() {
+        if (isOwned) {
+            // collect input
+            _ei.cmd_C = playing && Input.GetKeyDown(KeyCode.C);
+            _ei.cmd_Z = playing && Input.GetKeyDown(KeyCode.Z);
+            _ei.cmd_R = playing && Input.GetKeyDown(KeyCode.R);
+            _ei.cmd_lshift = playing && Input.GetKey(KeyCode.LeftShift);
+            _ei.cmd_E = playing && Input.GetKey(KeyCode.E);
+            _ei.cmd_Q = playing && Input.GetKey(KeyCode.Q);
+            _ei.braking = playing && Input.GetKey(KeyCode.X);
+            _ei.h = playing ? Input.GetAxis("Horizontal") : 0;
+            _ei.v = playing ? Input.GetAxis("Vertical") : 0;
+            _ei.mouseX = playing ? 2 * Input.GetAxis("Mouse X") : 0;
+            _ei.mouseY = playing ? 2 * Input.GetAxis("Mouse Y") : 0;
+            _ei.t_send = DateTime.Now.Ticks;
+            // send to server PC to execute
+            CmdInput(_ei);
+            // update UI in client PC
+            UpdateSelfUI();
+        }
     }
 
 
@@ -220,27 +258,25 @@ public class EngineerController : BasicController {
         claw.localPosition = Vector3.Lerp(claw_lt, claw_rt, ratio_claw);
     }
 
-    
+
     public bool holding = false;
     void Catch() {
         /* if no cmd to change holding state, there's nothing to do */
-        if (cmd_R && cmd_lshift) {
-            CmdCatch(holding);
-        }
-    }
-    [Command]
-    void CmdCatch(bool holding) {
-        RpcCatch(holding);
+        if (!(cmd_R && cmd_lshift))
+            return;
+
+        RpcCatch();
     }
     [ClientRpc]
-    void RpcCatch(bool holding) {
+    void RpcCatch() {
+        // flip holding state every time when called
         if (holding) {
             cm.Release();
             cm.enabled = false;
         } else {
             cm.enabled = true;
         }
-        this.holding = !holding;
+        holding = !holding;
     }
 
 

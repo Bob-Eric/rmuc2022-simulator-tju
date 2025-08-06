@@ -4,11 +4,11 @@ using UnityEngine;
 
 public abstract class BasicState : MonoBehaviour {
     public abstract void TakeDamage(GameObject hitter, GameObject armor_hit, GameObject bullet);
-    
+
     public void SetArmorColor(ArmorColor armor_color) {
         this.armor_color = armor_color;
         string other_color = armor_color == ArmorColor.Red ? "blue" : "red";
-        Material new_mat = armor_color == ArmorColor.Red ? AssetManager.singleton.light_red 
+        Material new_mat = armor_color == ArmorColor.Red ? AssetManager.singleton.light_red
             : AssetManager.singleton.light_blue;
         Renderer[] rens = GetComponentsInChildren<Renderer>();
         foreach (Renderer ren in rens) {
@@ -19,7 +19,7 @@ public abstract class BasicState : MonoBehaviour {
         }
     }
     public ArmorColor armor_color;
-   
+
     protected Dictionary<GameObject, float> last_hit = new Dictionary<GameObject, float>();
     protected void Hit(GameObject hitter) {
         if (!last_hit.ContainsKey(hitter)) {
@@ -28,7 +28,7 @@ public abstract class BasicState : MonoBehaviour {
             last_hit[hitter] = Time.time;
         }
     }
-   
+
     public int expval;
 
     protected GameObject killer;
@@ -48,17 +48,20 @@ public abstract class BasicState : MonoBehaviour {
         } else {
             RoboState[] robots = this.armor_color == ArmorColor.Red ? BattleField.singleton.robo_blue
                 : BattleField.singleton.robo_red;
-            List<RoboState> hero_infa = new List<RoboState>();
+            // get all alive infantry and hero robots
+            List<RoboState> rs_list = new List<RoboState>();
             foreach (RoboState robot in robots) {
                 string robo_name = robot.gameObject.name.ToLower();
                 bool heroOrinfa = robo_name.Contains("infantry") || robo_name.Contains("hero");
                 if (robot.survival && heroOrinfa)
-                    hero_infa.Add(robot);
+                    rs_list.Add(robot);
             }
+
             int exp = fb ? this.expval + 50 : this.expval;
-            int exp_average = Mathf.RoundToInt(exp / (float)hero_infa.Count);
-            foreach (RoboState robot in hero_infa)
-                robot.currexp += exp_average;
+            if (rs_list.Count > 0) {
+                int exp_average = Mathf.RoundToInt(exp / (float)rs_list.Count);
+                rs_list.ForEach(rs => rs.currexp += exp_average);
+            }
         }
         if (fb) {
             // Debug.Log("first blood");

@@ -49,8 +49,8 @@ public class RoboState : BasicState {
     /// <summary>
     /// Get the sync data of this robot state. Called by syncnode in server PC only.
     /// </summary>
+    RoboSync tmp = new RoboSync();
     public virtual RoboSync Pull() {
-        RoboSync tmp = new RoboSync();
         tmp.currblood = this.currblood;
         tmp.maxblood = this.maxblood;
         if (!this.survival)

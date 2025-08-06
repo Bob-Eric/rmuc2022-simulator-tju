@@ -36,7 +36,7 @@ public class XchgSpot : MonoBehaviour {
             if (col.name.Contains(CatchMine.mine_s)) {
                 if (BattleField.singleton.GetBattleTime() - t_last < 3f) {
                     BattleField.singleton.XchgMine(armor_color, col.name.Contains("gold"));
-                    Debug.Log("xchg a mine successfully");
+                    Debug.Log($"xchg a {(col.name.Contains("gold")?"gold":"normal")} mine successfully.");
                     StartCoroutine(CollLightBlink());
                 } else
                     Debug.Log("xchg too late");

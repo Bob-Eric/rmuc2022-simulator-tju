@@ -12,8 +12,8 @@ public class OutpostState : TowerState {
     /// <summary>
     /// API
     /// </summary>
+    OutpostSync tmp = new OutpostSync();
     public OutpostSync Pull() {
-        OutpostSync tmp = new OutpostSync();
         tmp.currblood = this.currblood;
         tmp.survival = this.survival;
         tmp.invul = this.invul;

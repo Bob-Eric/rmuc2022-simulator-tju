@@ -51,8 +51,8 @@ public class BaseState : TowerState {
         }
     }
 
+    BaseSync tmp = new BaseSync();
     public BaseSync Pull() {
-        BaseSync tmp = new BaseSync();
         tmp.currblood = this.currblood;
         tmp.survival = this.survival;
         tmp.shield = this.shield;

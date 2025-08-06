@@ -32,11 +32,11 @@ public class TowerState : BasicState {
     }
 
 
+    Vector3 scale = new Vector3(1, 1, 1);
     protected void SetBloodBars() {
-        Vector3 scale = new Vector3(1, 1, (float)currblood / maxblood);
-        foreach (GameObject bb in blood_bars) {
+        scale.z = (float)currblood / maxblood;
+        foreach (GameObject bb in blood_bars)
             bb.transform.localScale = scale;
-        }
     }
 
 

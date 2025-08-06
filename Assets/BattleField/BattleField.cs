@@ -278,8 +278,8 @@ public class BattleField : MonoBehaviour {
     }
 
 
+    BatSync tmp = new BatSync();
     public BatSync Pull() {
-        BatSync tmp = new BatSync();
         tmp.time_bat = GetBattleTime();
         tmp.money_red = this.money_red;
         tmp.money_red_max = this.money_red_max;

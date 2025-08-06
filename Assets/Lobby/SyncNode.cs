@@ -58,6 +58,7 @@ public struct BatSync {
     public float time_bat;
 }
 
+/// contains all info (references to synchronized data) needed by UI
 public struct UISync {
     public SyncList<RoboSync> robots;
     public BaseSync bs_r;
@@ -82,33 +83,33 @@ public struct UISync {
 }
 
 public class SyncNode : NetworkBehaviour {
-    [SyncVar] private bool ready_push = false;
+    [SyncVar] bool ready_push = false;
 
-    [SyncVar] private BatSync bat_sync;
+    [SyncVar] BatSync bat_sync;
 
     /* rune */
-    [SyncVar] private Vector3 rune_rot = new Vector3();
-    [SyncVar] private float a, w, t;
-    [SyncVar] private int sgn;
-    [SyncVar] private RuneBuff rune_buff;
-    [SyncVar] private RuneSync rune_sync_red = new RuneSync();
-    [SyncVar] private RuneSync rune_sync_blue = new RuneSync();
+    [SyncVar] Vector3 rune_rot = new Vector3();
+    [SyncVar] float a, w, t;
+    [SyncVar] int sgn;
+    [SyncVar] RuneBuff rune_buff;
+    [SyncVar] RuneSync rune_sync_red = new RuneSync();
+    [SyncVar] RuneSync rune_sync_blue = new RuneSync();
 
     /* outpost */
-    [SyncVar] private OutpostSync otpt_sync_red = new OutpostSync();
-    [SyncVar] private OutpostSync otpt_sync_blue = new OutpostSync();
+    [SyncVar] OutpostSync otpt_sync_red = new OutpostSync();
+    [SyncVar] OutpostSync otpt_sync_blue = new OutpostSync();
 
     /* base */
-    [SyncVar] private BaseSync base_sync_red = new BaseSync();
-    [SyncVar] private BaseSync base_sync_blue = new BaseSync();
+    [SyncVar] BaseSync base_sync_red = new BaseSync();
+    [SyncVar] BaseSync base_sync_blue = new BaseSync();
 
     /* guard */
-    [SyncVar] private RoboSync guard_sync_red = new RoboSync();
-    [SyncVar] private RoboSync guard_sync_blue = new RoboSync();
+    [SyncVar] RoboSync guard_sync_red = new RoboSync();
+    [SyncVar] RoboSync guard_sync_blue = new RoboSync();
 
     /* robots */
     /* Note: SyncList can and only can be modify in Server */
-    private readonly SyncList<RoboSync> robo_sync_all = new SyncList<RoboSync>();
+    readonly SyncList<RoboSync> robo_sync_all = new SyncList<RoboSync>();
 
 
     /****************** alias ****************/
