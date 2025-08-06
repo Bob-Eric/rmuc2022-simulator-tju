@@ -107,7 +107,9 @@ public class RoboState : BasicState {
         foreach (ArmorController ac in acs)
             ac.Disable();
 
-        robo_buff.ForEach(buff => buff.Disable());
+        // disable all buffs. ToArray() is used to avoid modifying the list while iterating.
+        foreach (Buff buff in robo_buff.ToArray())
+            buff.Disable();
         UpdateBuff();
 
         DistribExp();

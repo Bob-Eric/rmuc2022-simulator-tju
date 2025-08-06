@@ -19,7 +19,7 @@ public class HoldMine : MonoBehaviour {
     }
 
 
-    void Update() {
+    void LateUpdate() {
         KeepMinesPos();
     }
 
