@@ -5,18 +5,18 @@ using Mirror;
 using System;
 
 public struct EngineerInput {
-    public bool cmd_C;
-    public bool cmd_Z;
-    public bool cmd_R;
-    public bool cmd_lshift;
-    public bool cmd_E;
-    public bool cmd_Q;
-    public bool braking;
-    public float h;
-    public float v;
-    public float mouseX;
-    public float mouseY;
-    public long t_send;
+    public bool cmd_C;          // super capacity; claw rotated by -90 degrees
+    public bool cmd_Z;          // ;claw rotated by 90 degrees
+    public bool cmd_R;          // revive card; claw suction
+    public bool cmd_LShift;     // chassis-claw mode switch
+    public bool cmd_E;          // elevate claw
+    public bool cmd_Q;          // drop claw
+    public bool cmd_X;          // braking
+    public float h;             // horizontal input
+    public float v;             // vertical input
+    public float mouseX;        // mouse X input
+    public float mouseY;        // mouse Y input
+    public float dt;            // delta time
 };
 
 public class EngineerController : BasicController {
@@ -44,14 +44,8 @@ public class EngineerController : BasicController {
 
 
     bool playing => Cursor.lockState == CursorLockMode.Locked;
-    bool cmd_C, cmd_Z, cmd_R, cmd_lshift, cmd_E, cmd_Q;
-    bool braking;
-    float h, v;
-    float mouseX, mouseY;
 
-    /// <summary>
-    /// non-API
-    /// </summary>
+
     public override void OnStartClient() {
         base.OnStartClient();
         if (isOwned) {
@@ -75,54 +69,76 @@ public class EngineerController : BasicController {
         yaw_ang = _rigid.transform.localEulerAngles.y;
 
         if (isOwned) {
-            BattleField.singleton.robo_local = this.robo_state;
+            BattleField.singleton.robo_local = robo_state;
         }
     }
 
+
+    /* NOTE: multiple CmdInput may be handled in one frame in server PC. 
+        Hence, we use "h += ei.h" instead of "h = ei.h" to avoid overwriting.
+    */
     [Command]
     void CmdInput(EngineerInput ei) {
-        cmd_C = ei.cmd_C;
-        cmd_Z = ei.cmd_Z;
-        cmd_R = ei.cmd_R;
-        cmd_lshift = ei.cmd_lshift;
-        cmd_E = ei.cmd_E;
-        cmd_Q = ei.cmd_Q;
-        braking = ei.braking;
-        h = ei.h;
-        v = ei.v;
-        mouseX = ei.mouseX;
-        mouseY = ei.mouseY;
-        if (robo_state.survival) {
-            Move();
-            Look();
-            MovClaw();
-            Catch();
-            Save();
-        } else
-            StopMove();
+        if (!ei.cmd_LShift) {
+            /* chassis mode */
+            saving ^= ei.cmd_R; // toggle saving state
+            if (ei.cmd_E ^ ei.cmd_Q)
+                yaw_ang += (ei.cmd_E ? 1 : -1) * 30 * ei.dt;
+            h += ei.h;
+            v += ei.v;
+            yaw_ang += ei.mouseX;
+        } else {
+            /* claw mode */
+            // set target rotation of wrist
+            if (ei.cmd_C ^ ei.cmd_Z)
+                st_wrist += ei.cmd_C ? 90 : -90;
+            // hold
+            hold_switch ^= ei.cmd_R;
+            // elevate
+            if (ei.cmd_E ^ ei.cmd_Q)
+                ratio_elev = Mathf.Clamp01(ratio_elev + (ei.cmd_E ? ei.dt : -ei.dt));
+            // move arm
+            ratio_arm = Mathf.Clamp01(ratio_arm + ei.v * ei.dt);
+            // move claw
+            ratio_claw = Mathf.Clamp01(ratio_claw + ei.h * ei.dt);
+        }
+        pitch_ang = Mathf.Clamp(pitch_ang - ei.mouseY, -pitch_max, -pitch_min);
+        braking = ei.cmd_X || ei.cmd_LShift;
     }
 
-    EngineerInput _ei = new EngineerInput();
+
+    EngineerInput _ei = new();
     void Update() {
         if (isOwned) {
-            // collect input
+            // collect input in client PC
             _ei.cmd_C = playing && Input.GetKeyDown(KeyCode.C);
             _ei.cmd_Z = playing && Input.GetKeyDown(KeyCode.Z);
             _ei.cmd_R = playing && Input.GetKeyDown(KeyCode.R);
-            _ei.cmd_lshift = playing && Input.GetKey(KeyCode.LeftShift);
+            _ei.cmd_LShift = playing && Input.GetKey(KeyCode.LeftShift);
             _ei.cmd_E = playing && Input.GetKey(KeyCode.E);
             _ei.cmd_Q = playing && Input.GetKey(KeyCode.Q);
-            _ei.braking = playing && Input.GetKey(KeyCode.X);
+            _ei.cmd_X = playing && Input.GetKey(KeyCode.X);
             _ei.h = playing ? Input.GetAxis("Horizontal") : 0;
             _ei.v = playing ? Input.GetAxis("Vertical") : 0;
             _ei.mouseX = playing ? 2 * Input.GetAxis("Mouse X") : 0;
             _ei.mouseY = playing ? 2 * Input.GetAxis("Mouse Y") : 0;
-            _ei.t_send = DateTime.Now.Ticks;
+            _ei.dt = Time.deltaTime;
             // send to server PC to execute
-            CmdInput(_ei);
+            if (NetworkClient.active)
+                CmdInput(_ei);
             // update UI in client PC
             UpdateSelfUI();
         }
+
+        if (NetworkServer.active)
+            if (robo_state.survival) {
+                Move();
+                Look();
+                MovClaw();
+                Catch();
+                Save();
+            } else
+                StopMove();
     }
 
 
@@ -153,12 +169,9 @@ public class EngineerController : BasicController {
     const int wheel_num = 4;
     const float torque_drive = 8f;
     PIDController chas_ctl = new PIDController(1, 0, 0);
+    bool braking;
+    float h, v;
     void Move() {
-        if (cmd_lshift) {
-            StopMove();
-            return;
-        }
-
         /* brake */
         if (braking) {
             for (int i = 0; i < wheel_num; i++) {
@@ -171,18 +184,16 @@ public class EngineerController : BasicController {
             foreach (var wc in wheelColliders)
                 wc.brakeTorque = 0;
 
-        // Get move direction from user input
-
         // calc drive force
         float steer_ang = Mathf.Rad2Deg * Mathf.Atan2(h, v);
         float t1 = 0;
         if (Mathf.Abs(h) >= 1e-3 || Mathf.Abs(v) >= 1e-3)
             t1 = torque_drive;
+        // reset h and v
+        h = v = 0;
 
         /* spin */
         float t2 = 0;
-        if (cmd_Q ^ cmd_E)
-            yaw_ang += (cmd_E ? 1 : -1) * 30 * Time.deltaTime;
 
         float d_ang = -Mathf.DeltaAngle(yaw_ang, _rigid.transform.eulerAngles.y);
         if (Mathf.Abs(d_ang) < 5) d_ang = 0;
@@ -197,7 +208,7 @@ public class EngineerController : BasicController {
             Vector2 f1 = t1 * new Vector2(Mathf.Cos(ang1), Mathf.Sin(ang1));
             Vector2 f2 = t2 * new Vector2(Mathf.Cos(ang2), Mathf.Sin(ang2));
             Vector2 f_all = f1 + f2;
-            wheelColliders[i].steerAngle = (Mathf.Rad2Deg * Mathf.Atan2(f_all.y, f_all.x));
+            wheelColliders[i].steerAngle = Mathf.Rad2Deg * Mathf.Atan2(f_all.y, f_all.x);
             wheelColliders[i].motorTorque = f_all.magnitude;
             torque += wheelColliders[i].motorTorque;
         }
@@ -214,11 +225,6 @@ public class EngineerController : BasicController {
     const float pitch_min = -30;
     const float pitch_max = 40;
     void Look() {
-        /* Get look dir from user input */
-        pitch_ang -= mouseY;
-        pitch_ang = Mathf.Clamp(pitch_ang, -pitch_max, -pitch_min);
-        if (!cmd_lshift)
-            yaw_ang += mouseX;
         /* Rotate Transform "yaw" & "pitch" */
         pitch.localEulerAngles = new Vector3(pitch_ang, 0, 0);
     }
@@ -238,18 +244,6 @@ public class EngineerController : BasicController {
     float ang = 0;
     float ratio_elev = 0f;
     void MovClaw() {
-        if (cmd_lshift) {
-            /* elevate */
-            if (cmd_E ^ cmd_Q)
-                ratio_elev = Mathf.Clamp01(ratio_elev + (cmd_E ? Time.deltaTime : -Time.deltaTime));
-            /* move arm */
-            ratio_arm = Mathf.Clamp01(ratio_arm + v * Time.deltaTime);
-            /* move wrist */
-            if (cmd_Z ^ cmd_C)
-                st_wrist += cmd_C ? 90 : -90;
-            /* move claw */
-            ratio_claw = Mathf.Clamp01(ratio_claw + h * Time.deltaTime);
-        }
         elev_1st.localPosition = Vector3.Lerp(elev_1st_start, elev_1st_end, ratio_elev);
         elev_2nd.localPosition = Vector3.Lerp(elev_2nd_start, elev_2nd_end, ratio_elev);
         arm.localPosition = Vector3.Lerp(arm_start, arm_end, ratio_arm);
@@ -259,24 +253,25 @@ public class EngineerController : BasicController {
     }
 
 
+    bool hold_switch;
     public bool holding = false;
     void Catch() {
-        /* if no cmd to change holding state, there's nothing to do */
-        if (!(cmd_R && cmd_lshift))
+        if (!hold_switch)
             return;
 
-        RpcCatch();
+        hold_switch = false;
+        RpcCatch(to_hold: !holding);
+        holding = !holding;
     }
     [ClientRpc]
-    void RpcCatch() {
+    void RpcCatch(bool to_hold) {
         // flip holding state every time when called
-        if (holding) {
+        if (!to_hold) {
             cm.Release();
             cm.enabled = false;
         } else {
             cm.enabled = true;
         }
-        holding = !holding;
     }
 
 
@@ -285,9 +280,6 @@ public class EngineerController : BasicController {
     bool saving = false;
     float ratio_rev = 0; // reach-out ratio of revive_card
     public void Save() {
-        if (!cmd_lshift && cmd_R) {
-            saving = !saving;
-        }
         ratio_rev = Mathf.Clamp01(ratio_rev + (saving ? Time.deltaTime : -Time.deltaTime));
         rev_card.localPosition = Vector3.Lerp(card_start, card_end, ratio_rev);
     }
