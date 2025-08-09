@@ -74,14 +74,21 @@ public class BattleNetworkManager : NetworkManager {
 
     /* called on server when a client is disconnected */
     public override void OnServerDisconnect(NetworkConnectionToClient conn) {
-        base.OnServerDisconnect(conn);
         if (isScnLobby())
             net_lob.OnPlayerLeave(conn);
         else if (isScnField()) {
-            int idx = this.playerSyncs.FindIndex(i => i.connId == conn.connectionId);
-            if (idx != -1)
-                this.playerSyncs.RemoveAt(idx);
+            playerSyncs.RemoveAll(ps => ps.connId == conn.connectionId);
+            foreach (RoboState rs in BattleField.singleton.robo_all) {
+                NetworkIdentity ni = rs.GetComponent<NetworkIdentity>();
+                if (ni != null && ni.connectionToClient == conn) {
+                    ni.RemoveClientAuthority();
+                    break;
+                }
+            }
         }
+
+        // will destroy all conn-owned objects here
+        base.OnServerDisconnect(conn);
     }
 
 
@@ -91,19 +98,20 @@ public class BattleNetworkManager : NetworkManager {
         if (isScnField()) {
             string log = "Player <=> Robot: \n";
             /* BattleField having been loaded, assign robot instance to avatar owner */
-            foreach (RoboState robot in BattleField.singleton.robo_all) {
-                int syncIdx = playerSyncs.FindIndex(i => i.ava_tag == robot.name);
+            foreach (RoboState rs in BattleField.singleton.robo_all) {
+                int syncIdx = playerSyncs.FindIndex(i => i.ava_tag == rs.name);
                 if (syncIdx == -1)
                     continue;
                 NetworkConnectionToClient connToClient = NetworkServer.connections[playerSyncs[syncIdx].connId];
-                robot.GetComponent<NetworkIdentity>().AssignClientAuthority(connToClient);
-                log += playerSyncs[syncIdx].player_name + " takes " + robot.name + "\n";
+                rs.GetComponent<NetworkIdentity>().AssignClientAuthority(connToClient);
+                log += playerSyncs[syncIdx].player_name + " takes " + rs.name + "\n";
             }
             Debug.Log(log);
         }
     }
 
 
+    /* called on that client when a client is connected */
     public override void OnClientConnect() {
         base.OnClientConnect();
         if (mainmenu == null || net_lob == null)
@@ -114,7 +122,7 @@ public class BattleNetworkManager : NetworkManager {
 
         /* when first joining, 1. send fake AvaMes to register
             2. init RoboTabs by playerSyncs that pulled from server PC */
-        NetworkClient.Send<NetLobby.AvaOwnMessage>(new NetLobby.AvaOwnMessage(NetLobby.NULLAVA, mainmenu.input_info.text));
+        NetworkClient.Send(new NetLobby.AvaOwnMessage(NetLobby.NULLAVA, mainmenu.input_info.text));
     }
 
 

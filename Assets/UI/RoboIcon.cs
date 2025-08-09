@@ -48,17 +48,17 @@ namespace RMUC_UI {
             SetIconPos();
         }
 
-        float x => robo_conn.transform.position.x;
-        float z => robo_conn.transform.position.z;
-        List<float> X = new List<float>();
-        List<float> Z = new List<float>();
+        List<float> x_list = new List<float>();
+        List<float> z_list = new List<float>();
         Vector2 vel;
         void FixedUpdate() {
-            X.Add(x); Z.Add(z);
-            if (X.Count < 5)
+            if (robo_conn == null || robo_conn.rigid == null)
                 return;
-            vel = new Vector2(X[4] - X[0], Z[4] - Z[0]) / (4 * Time.fixedDeltaTime);
-            X.RemoveAt(0); Z.RemoveAt(0);
+            x_list.Add(robo_conn.transform.position.x); z_list.Add(robo_conn.transform.position.z);
+            if (x_list.Count < 5)
+                return;
+            vel = new Vector2(x_list[4] - x_list[0], z_list[4] - z_list[0]) / (4 * Time.fixedDeltaTime);
+            x_list.RemoveAt(0); z_list.RemoveAt(0);
         }
 
 
