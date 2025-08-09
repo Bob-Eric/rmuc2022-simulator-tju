@@ -30,12 +30,10 @@ public class QuickStart : MonoBehaviour {
                 wpn.bullnum = 100;
                 wpn.currheat = 0;
             }
-            // BattleField.singleton.money_red = 1000;
-            // BattleField.singleton.money_red_max = 1000;
-            // BattleField.singleton.money_blue = 1000;
-            // BattleField.singleton.money_blue_max = 1000;
-            if (Input.GetKeyDown(KeyCode.L))
-                BattleField.singleton.XchgMine(ArmorColor.Red, true);
+            BattleField.singleton.money_red = 1000;
+            BattleField.singleton.money_red_max = 1000;
+            BattleField.singleton.money_blue = 1000;
+            BattleField.singleton.money_blue_max = 1000;
         }
 
     }

@@ -66248,7 +66248,7 @@ MonoBehaviour:
   maxDist: 15
   dynCoeff: 0.4
   lowpassCoef: 0.8
-  heightOffset: 0.04
+  heightOffset: 0.2
   centerOfMass: {x: 0, y: 0, z: 0}
   yaw: {fileID: 1444113319048627273}
   pitch: {fileID: 891577611837757158}
@@ -66306,7 +66306,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 1
+  syncDirection: 0
   syncMode: 0
   syncInterval: 0
   target: {fileID: 7641439840345675748}
@@ -66340,7 +66340,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 1
+  syncDirection: 0
   syncMode: 0
   syncInterval: 0
   target: {fileID: 1444113319048627273}
@@ -66374,7 +66374,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 1
+  syncDirection: 0
   syncMode: 0
   syncInterval: 0
   target: {fileID: 891577611837757158}

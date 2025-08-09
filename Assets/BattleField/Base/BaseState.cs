@@ -67,8 +67,6 @@ public class BaseState : TowerState {
             if (!base_sync.survival)
                 foreach (ArmorController ac in acs)
                     ac.Disable();
-            // else
-            //     StartCoroutine(this.ArmorsBlink(0.1f));
         }
         if (this.invul && !base_sync.invul)
             SetInvulLight(false);
@@ -77,12 +75,18 @@ public class BaseState : TowerState {
         this.invul = base_sync.invul;
     }
 
-    public void SetInvulLight(bool on) {
-        if (on)
+    public void SetInvulLight(bool turn_on) {
+        if (turn_on) {
             foreach (ArmorController ac in acs)
                 ac.SetLight(AssetManager.singleton.light_purple);
-        else
+            foreach (GameObject go in blood_bars)
+                go.transform.GetChild(0).GetComponent<Renderer>().material = AssetManager.singleton.light_purple;
+        } else {
+            Material mat = armor_color == ArmorColor.Red ? AssetManager.singleton.light_red : AssetManager.singleton.light_blue;
             foreach (ArmorController ac in acs)
                 ac.SetLight(true);
+            foreach (GameObject go in blood_bars)
+                go.transform.GetChild(0).GetComponent<Renderer>().material = mat;
+        }
     }
 }

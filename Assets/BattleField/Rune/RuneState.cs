@@ -32,7 +32,7 @@ public class RuneState : BasicState {
             blade.SetBladeLight(RuneLight.All_off);
             blades_hit.Add(RuneLight.All_off);
         }
-        rune_center.GetComponent<Renderer>().sharedMaterial = AssetManager.singleton.light_off;
+        rune_center.GetComponent<Renderer>().material = AssetManager.singleton.light_off;
         activate_state = Activation.Idle;
     }
 
@@ -46,14 +46,14 @@ public class RuneState : BasicState {
                     blades[i].SetBladeLight(RuneLight.All_off);
                     blades_hit[i] = RuneLight.All_off;
                 }
-                rune_center.GetComponent<Renderer>().sharedMaterial = AssetManager.singleton.light_off;
+                rune_center.GetComponent<Renderer>().material = AssetManager.singleton.light_off;
                 activate_state = new_state;
                 center_light = false;
                 break;
 
             case Activation.Ready:
                 if (activate_state == Activation.Idle) {
-                    rune_center.GetComponent<Renderer>().sharedMaterial = _light;
+                    rune_center.GetComponent<Renderer>().material = _light;
                     activate_state = new_state;
                     center_light = true;
                 }
@@ -157,7 +157,7 @@ public class RuneState : BasicState {
     }
 
     public void Push(RuneSync rune_sync) {
-        rune_center.GetComponent<Renderer>().sharedMaterial = rune_sync.center_light ?
+        rune_center.GetComponent<Renderer>().material = rune_sync.center_light ?
             _light : AssetManager.singleton.light_off;
         for (int i = 0; i < Mathf.Min(blades.Count, rune_sync.blades_light.Length); i++) {
             blades[i].SetBladeLight(rune_sync.blades_light[i]);

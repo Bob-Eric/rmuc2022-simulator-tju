@@ -23,8 +23,8 @@ public class BasicController : NetworkBehaviour {
 
 
     Vector3 vel_filt;
-    Vector3 LowPassFilter(Vector3 vel, float alpha=0.8f) {
-        vel_filt =  alpha * vel_filt + (1 - alpha) * vel;
+    Vector3 LowPassFilter(Vector3 vel, float alpha = 0.8f) {
+        vel_filt = alpha * vel_filt + (1 - alpha) * vel;
         return vel_filt;
     }
 
@@ -67,7 +67,7 @@ public class BasicController : NetworkBehaviour {
             target_armors = new List<ArmorController> { rs.blades[rs.idx_target].armor };
             minang_th = 60;
         } else
-            target_armors = (robo_state.armor_color == ArmorColor.Blue) ^ runeMode ? ArmorController.vis_armors_red : ArmorController.vis_armors_blue;
+            target_armors = (robo_state.armor_color == ArmorColor.Blue) ^ runeMode ? ArmorController.all_armors_red : ArmorController.all_armors_blue;
         foreach (ArmorController ac in target_armors) {
             // judge whether armor's enabled
             if (!ac.en)
@@ -82,7 +82,7 @@ public class BasicController : NetworkBehaviour {
             float ang = Vector3.Angle(ac.transform.position - bull_start.position, bull_start.forward);
             if (ang < minang || ac == last_target) {
                 RaycastHit hitinfo;
-                Ray ray = new Ray(bull_start.position, ac.transform.position - bull_start.position);
+                Ray ray = new(bull_start.position, ac.transform.position - bull_start.position);
                 // judge whether armor's under cover, bullet is in "Ignore Raycast" layer
                 if (!Physics.Raycast(ray, out hitinfo, maxDist, ~LayerMask.GetMask("Ignore Raycast")))
                     continue;
@@ -121,6 +121,7 @@ public class BasicController : NetworkBehaviour {
     }
 
 
+    // TODO: change to close form solution
     float spd => robo_state.bullspd;
     const float g = 9.8f;
     /** calc gravity effect and correct trajectory

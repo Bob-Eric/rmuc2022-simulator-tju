@@ -3,6 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 
+
+public struct DroneInput {
+    public bool cmd_E;
+    public bool cmd_Q;
+    public bool cmd_R;
+    public bool cmd_LMouse;
+    public bool cmd_RMouse;
+    public float v;
+    public float h;
+    public float mouseX;
+    public float mouseY;
+}
+
+
 public class DroneController : BasicController {
     [Header("Kinematic")]
     public Vector3 centerOfMass;
@@ -18,22 +32,20 @@ public class DroneController : BasicController {
 
     public const float speed = 0.5f;
 
-    private float last_fire = 0;
-    private float pitch_ang = 0;
-    private float pitch_min = -30;
-    private float pitch_max = 40;
-    private Weapon wpn;
+    float last_fire = 0;
+    float pitch_ang = 0;
+    float pitch_min = -45;
+    float pitch_max = 15;
+    Weapon wpn;
 
 
     bool playing => Cursor.lockState == CursorLockMode.Locked;
-    bool cmd_E => playing && Input.GetKey(KeyCode.E);
-    bool cmd_Q => playing && Input.GetKey(KeyCode.Q);
-    float v => playing ? Input.GetAxis("Vertical") : 0;
-    float h => playing ? Input.GetAxis("Horizontal") : 0;
 
-    /// <summary>
-    /// non-API
-    /// </summary>
+    bool cmd_E, cmd_Q, cmd_R;
+    bool cmd_LMouse, cmd_RMouse;
+    float mouseX, mouseY;
+    float h, v;
+
     public override void OnStartClient() {
         base.OnStartClient();
         if (isOwned) {
@@ -56,7 +68,6 @@ public class DroneController : BasicController {
     }
 
 
-    bool unowned => NetworkServer.active && this.netIdentity.connectionToClient == null;
     void Start() {
         /* even if no authority, external reference should be inited */
         _rigid.centerOfMass = centerOfMass;
@@ -66,25 +77,46 @@ public class DroneController : BasicController {
             BattleField.singleton.bat_ui.robo_prof.SetActive(false);
             BattleField.singleton.bat_ui.drone_prof.SetActive(true);
         }
-        if (unowned) {
-            // Debug.Log("disable client auth of unowned robot");
-            foreach (var tmp in GetComponents<NetworkTransform>()) {
-                tmp.syncDirection = SyncDirection.ServerToClient;
-            }
-        }
     }
 
 
+    DroneInput _di = new();
     void Update() {
-        if (!isOwned || !BattleField.singleton.started_game)
+        if (!BattleField.singleton.started_game)
             return;
 
-        if (robo_state.survival) {
+        if (isOwned) {
+            _di.cmd_E = playing && Input.GetKey(KeyCode.E);
+            _di.cmd_Q = playing && Input.GetKey(KeyCode.Q);
+            _di.cmd_R = playing && Input.GetKeyDown(KeyCode.R);
+            _di.cmd_LMouse = playing && Input.GetMouseButton(0);
+            _di.cmd_RMouse = playing && Input.GetMouseButton(1);
+            _di.h = playing ? Input.GetAxis("Horizontal") : 0;
+            _di.v = playing ? Input.GetAxis("Vertical") : 0;
+            _di.mouseX = playing ? Input.GetAxis("Mouse X") : 0;
+            _di.mouseY = playing ? Input.GetAxis("Mouse Y") : 0;
+            CmdInput(_di);
+            UpdateSelfUI();
+        }
+        if (NetworkServer.active) {
             Look();
             Shoot();
             Attack();
         }
-        UpdateSelfUI();
+    }
+
+
+    [Command]
+    void CmdInput(DroneInput di) {
+        cmd_E = di.cmd_E;
+        cmd_Q = di.cmd_Q;
+        cmd_R |= di.cmd_R;
+        cmd_LMouse = di.cmd_LMouse;
+        cmd_RMouse = di.cmd_RMouse;
+        h += di.h;
+        v += di.v;
+        mouseX += di.mouseX;
+        mouseY += di.mouseY;
     }
 
 
@@ -94,12 +126,9 @@ public class DroneController : BasicController {
         if (!BattleField.singleton.started_game)
             return;
         PaddleSpin();
-        if (!isOwned)
-            return;
 
-        if (robo_state.survival) {
+        if (NetworkServer.active)
             Move();
-        }
     }
 
 
@@ -112,6 +141,12 @@ public class DroneController : BasicController {
 
     RMUC_UI.BattleUI bat_ui => BattleField.singleton.bat_ui;    // alias
     void UpdateSelfUI() {
+        if (t_bat - last_atk >= 30) {
+            bat_ui.img_droneTimer.fillAmount = 0;
+            wpn.bullnum = 0;
+        } else
+            bat_ui.img_droneTimer.fillAmount = 1 - (t_bat - last_atk) / 30;
+
         /* update buff display in UI */
         bat_ui.indic_buf[0] = Mathf.Approximately(robo_state.B_atk, 0f) ? -1            // atk
             : Mathf.Approximately(robo_state.B_atk, 0.5f) ? 0 : 1;
@@ -127,13 +162,12 @@ public class DroneController : BasicController {
     }
 
 
-    PIDController pid_follow = new PIDController(5f, 0f, 10f);         // T = J*theta''. theta is set (by mouse) and T is CV. 
-                                                                       //  so it's a second-order system. use PD controller
+    PIDController pid_yaw = new PIDController(5f, 0f, 10f);
     PIDController pid_throttle = new PIDController(6f, 0.2f, 0.1f);
-    PIDController pid_force_v = new PIDController(2f, 0.01f, 0f);                // control force forward
-    PIDController pid_force_h = new PIDController(2f, 0.01f, 0f);                // control force right
-    PIDController pid_lean_v = new PIDController(7f, 0.01f, 25f);
-    PIDController pid_lean_h = new PIDController(7f, 0.01f, 25f);
+    PIDController pid_sim_v = new PIDController(2f, 0.01f, 0f);                // control force forward
+    PIDController pid_sim_h = new PIDController(2f, 0.01f, 0f);                // control force right
+    PIDController pid_pitch = new PIDController(7f, 0.01f, 25f);
+    PIDController pid_roll = new PIDController(7f, 0.01f, 25f);
     void Move() {
         // ascend and descend
         float vel_set = speed * ((cmd_E ? 1 : 0) - (cmd_Q ? 1 : 0));
@@ -141,26 +175,27 @@ public class DroneController : BasicController {
         _rigid.AddForce(f_thro * Vector3.up, ForceMode.Acceleration);
 
         // fly horizontally
-        Vector3 vec_set = new Vector3();
+        Vector3 vec_set;
         if (Mathf.Abs(v) > 1e-3 || Mathf.Abs(h) > 1e-3) {
             Vector3 vec_v = Vector3.ProjectOnPlane(virt_yaw.forward, Vector3.up).normalized;
             Vector3 vec_h = Vector3.ProjectOnPlane(virt_yaw.right, Vector3.up).normalized;
             vec_set = (h * vec_h + v * vec_v).normalized;
         } else
             vec_set = Vector3.zero;
-        float tmp_v = Mathf.Clamp(pid_force_v.PID(vec_set.z - _rigid.velocity.z) * 30 * Time.fixedDeltaTime, -5, 5);
-        float tmp_h = Mathf.Clamp(pid_force_h.PID(vec_set.x - _rigid.velocity.x) * 30 * Time.fixedDeltaTime, -5, 5);
+        h = v = 0;
+        float tmp_v = Mathf.Clamp(pid_sim_v.PID(vec_set.z - _rigid.velocity.z) * 30 * Time.fixedDeltaTime, -5, 5);
+        float tmp_h = Mathf.Clamp(pid_sim_h.PID(vec_set.x - _rigid.velocity.x) * 30 * Time.fixedDeltaTime, -5, 5);
         _rigid.AddForce(tmp_v * Vector3.forward + tmp_h * Vector3.right, ForceMode.Acceleration);
 
         // set visual effect of leaning
         Vector3 error = 0.15f * vec_set - Vector3.ProjectOnPlane(_rigid.transform.up, Vector3.up);
-        float lean_v = Mathf.Clamp(pid_lean_v.PID(error.z) * 30 * Time.fixedDeltaTime, -3, 3);
-        float lean_h = Mathf.Clamp(pid_lean_h.PID(error.x) * 30 * Time.fixedDeltaTime, -3, 3);
+        float lean_v = Mathf.Clamp(pid_pitch.PID(error.z) * 30 * Time.fixedDeltaTime, -3, 3);
+        float lean_h = Mathf.Clamp(pid_roll.PID(error.x) * 30 * Time.fixedDeltaTime, -3, 3);
         _rigid.AddTorque(lean_v * Vector3.right + lean_h * Vector3.back, ForceMode.Acceleration);
 
         // wings follow turret
         float wing2yaw = Vector3.SignedAngle(_rigid.transform.forward, virt_yaw.forward, _rigid.transform.up);
-        float f_fol = Mathf.Clamp(pid_follow.PID(wing2yaw) * 30 * Time.fixedDeltaTime, -30, 30);
+        float f_fol = Mathf.Clamp(pid_yaw.PID(wing2yaw) * 30 * Time.fixedDeltaTime, -30, 30);
         _rigid.AddTorque(f_fol * _rigid.transform.up, ForceMode.Acceleration);
 
         // yaw rotates with _rigid, hence calibration is needed
@@ -170,7 +205,7 @@ public class DroneController : BasicController {
 
     /* keep yaw.up coincides with _rigid.up */
     void CalibVirtYaw() {
-        // yaw.transform.position = _rigid.transform.position;
+        virt_yaw.position = _rigid.transform.position;
         Vector3 axis = Vector3.Cross(virt_yaw.transform.up, _rigid.transform.up);
         float ang = Vector3.Angle(virt_yaw.transform.up, _rigid.transform.up);
         virt_yaw.transform.Rotate(axis, ang, Space.World);
@@ -185,15 +220,11 @@ public class DroneController : BasicController {
     }
 
     /* Get look dir from user input */
-    bool autoaim => playing && Input.GetMouseButton(1);
-    bool runeMode => Input.GetKey(KeyCode.R);
-    float mouseX => playing ? 2 * Input.GetAxis("Mouse X") : 0;
-    float mouseY => playing ? 2 * Input.GetAxis("Mouse Y") : 0;
     void Look() {
         CalibVirtYaw();
         // must align yaw to virt_yaw now because 'bullet_start', which is child of yaw is to use 
         CalibYaw();
-        if (!autoaim || !base.AutoAim(bullet_start, runeMode)) {
+        if (!cmd_RMouse || !base.AutoAim(bullet_start, runeMode: false)) {
             pitch_ang -= mouseY;
             pitch_ang = Mathf.Clamp(pitch_ang, -pitch_max, -pitch_min);
             /* Rotate Transform "pitch" by user input */
@@ -201,7 +232,9 @@ public class DroneController : BasicController {
             /* Rotate Transform "virt_yaw" by user input */
             virt_yaw.transform.Rotate(_rigid.transform.up, mouseX, Space.World);
 
-            base.last_target = null;
+            mouseX = mouseY = 0; // reset mouse input
+
+            last_target = null;
         }
         /* update yaw's transform, i.e., transform yaw to aim at target (store in virt yaw) */
         CalibYaw();
@@ -223,63 +256,35 @@ public class DroneController : BasicController {
     }
 
 
-    float last_atk = -30;
+    [SyncVar] float last_atk = -30;
+    const int money_req = 300;
     int money_team => robo_state.armor_color == ArmorColor.Red ? BattleField.singleton.money_red : BattleField.singleton.money_blue;
     float t_bat => BattleField.singleton.GetBattleTime();
     void Attack() {
-        if (!playing)
-            return;
         /* player calls drone attack and money suffices */
-        if (Input.GetKeyDown(KeyCode.R) && money_team >= 300 && t_bat - last_atk >= 30) {
-            CmdAttack();
+        if (cmd_R && money_team >= 300 && t_bat - last_atk >= 30) {
+            if (robo_state.armor_color == ArmorColor.Red)
+                BattleField.singleton.money_red -= money_req;
+            else
+                BattleField.singleton.money_blue -= money_req;
+            wpn.bullnum = 400;
             last_atk = t_bat;
         }
-        if (t_bat - last_atk >= 30) {
-            bat_ui.img_droneTimer.fillAmount = 0;
-            wpn.bullnum = 0;
-        }
-        float ratio = (t_bat - last_atk) / 30;
-        bat_ui.img_droneTimer.fillAmount = ratio > 1 ? 0 : 1 - ratio;
-    }
-    const int money_req = 300;
-    /* get ammunition supply at reborn spot */
-    [Command]
-    public void CmdAttack() {
-        /* double check in server PC */
-        if (money_team < money_req) {
-            Debug.Log("insufficient money to call drone attack");
-            return;
-        } else if (t_bat - last_atk < 30) {
-            Debug.Log("already attacking");
-            return;
-        }
-        if (robo_state.armor_color == ArmorColor.Red)
-            BattleField.singleton.money_red -= money_req;
-        else
-            BattleField.singleton.money_blue -= money_req;
-        wpn.bullnum = 400;
-        last_atk = t_bat;
+        cmd_R = false;
     }
 
 
-    bool is_fire => playing && Input.GetMouseButton(0);
     void Shoot() {
         if (t_bat - last_atk >= 30)
             return;
-        if (is_fire && Time.time - last_fire > 0.05f) {
-            CmdShoot(bullet_start.position, bullet_start.forward * robo_state.bullspd + _rigid.velocity);
-            last_fire = Time.time;
+        if (cmd_LMouse && t_bat - last_fire > 0.05f) {
+            Vector3 pos = bullet_start.position;
+            Vector3 vel = robo_state.bullspd * bullet_start.forward + _rigid.velocity;
+            if (!NetworkClient.active)
+                ShootBull(pos, vel);
+            RpcShoot(pos, vel);
+            last_fire = BattleField.singleton.GetBattleTime();
         }
-    }
-    [Command]
-    public void CmdShoot(Vector3 pos, Vector3 vel) {
-        if (t_bat - last_atk >= 30)
-            return;
-
-        if (!NetworkClient.active) {
-            ShootBull(pos, vel);
-        }
-        RpcShoot(pos, vel);
     }
     [ClientRpc]
     void RpcShoot(Vector3 pos, Vector3 vel) {

@@ -34,7 +34,7 @@ public class Rune : MonoBehaviour {
     /** use Init() instead of Start() to init instance of Rune, 
         so that instances of Rune, RuneState and RuneBlade are initialized in certain and correct order.
         
-        Otherwise, maybe RuneBlade is initialized before RuneState, thereby causing null sharedMaterial of Renderer
+        Otherwise, maybe RuneBlade is initialized before RuneState, thereby causing null material error of Renderer
      */
     public void Init() {
         rune_state_red.Init();

@@ -26,21 +26,21 @@ public class RuneBlade : MonoBehaviour {
         switch (state) {
             case RuneLight.All_off:
                 foreach (GameObject bar in flank_lightbars)
-                    bar.GetComponent<Renderer>().sharedMaterial = light_off;
+                    bar.GetComponent<Renderer>().material = light_off;
                 foreach (GameObject bar in central_lightbars)
-                    bar.GetComponent<Renderer>().sharedMaterial = light_off;
+                    bar.GetComponent<Renderer>().material = light_off;
                 break;
             case RuneLight.Center_on:
                 foreach (GameObject bar in flank_lightbars)
-                    bar.GetComponent<Renderer>().sharedMaterial = light_off;
+                    bar.GetComponent<Renderer>().material = light_off;
                 foreach (GameObject bar in central_lightbars)
-                    bar.GetComponent<Renderer>().sharedMaterial = light_on;
+                    bar.GetComponent<Renderer>().material = light_on;
                 break;
             case RuneLight.All_on:
                 foreach (GameObject bar in flank_lightbars)
-                    bar.GetComponent<Renderer>().sharedMaterial = light_on;
+                    bar.GetComponent<Renderer>().material = light_on;
                 foreach (GameObject bar in central_lightbars)
-                    bar.GetComponent<Renderer>().sharedMaterial = light_on;
+                    bar.GetComponent<Renderer>().material = light_on;
                 break;
         }
         blade_light = state;

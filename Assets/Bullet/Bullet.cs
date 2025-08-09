@@ -52,8 +52,7 @@ public class Bullet : MonoBehaviour {
             else
                 AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.hit_42mm, transform.position);
 
-            if (NetworkServer.active)
-                ac.TakeHit(collision, gameObject);
+            ac.TakeHit(collision, gameObject); // calc damage and armor blink
         }
         collided = true;
     }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ArmorController : MonoBehaviour {
-    public static List<ArmorController> vis_armors_red = new List<ArmorController>();
-    public static List<ArmorController> vis_armors_blue = new List<ArmorController>();
+    public static List<ArmorController> all_armors_red = new List<ArmorController>();
+    public static List<ArmorController> all_armors_blue = new List<ArmorController>();
     public bool en = true;          // whether this armor is enabled (to be target of auto-aim, to take hit)
     public GameObject[] light_bars;
     [Header("inward normal vector(local)")]
@@ -24,11 +24,11 @@ public class ArmorController : MonoBehaviour {
         /* get material by color */
         if (armor_color == ArmorColor.Blue) {
             _light = AssetManager.singleton.light_blue;
-            vis_armors_blue.Add(this);
+            all_armors_blue.Add(this);
         }
         else {
             _light = AssetManager.singleton.light_red;
-            vis_armors_red.Add(this);
+            all_armors_red.Add(this);
         }
     }
 
@@ -59,13 +59,13 @@ public class ArmorController : MonoBehaviour {
 
     public void SetLight(bool turn_on) {
         foreach (GameObject tmp in light_bars)
-            tmp.GetComponent<Renderer>().sharedMaterial = turn_on ? _light : AssetManager.singleton.light_off;
+            tmp.GetComponent<Renderer>().material = turn_on ? _light : AssetManager.singleton.light_off;
         return;
     }
 
     public void SetLight(Material mat) {
         foreach (GameObject tmp in light_bars)
-            tmp.GetComponent<Renderer>().sharedMaterial = mat;
+            tmp.GetComponent<Renderer>().material = mat;
         return;
     }
 
@@ -81,26 +81,8 @@ public class ArmorController : MonoBehaviour {
 
     void OnDestroy() {
         if (armor_color == ArmorColor.Red)
-            vis_armors_red.Remove(this);
+            all_armors_red.Remove(this);
         else
-            vis_armors_blue.Remove(this);
+            all_armors_blue.Remove(this);
     }
-
-    // void OnBecameVisible() {
-    //     if (armor_color == ArmorColor.Red)
-    //         vis_armors_red.Add(this);
-    //     else
-    //         vis_armors_blue.Add(this);
-    //     // Debug.Log("add armor: " + this);
-    //     // Debug.Log("vis_armors_red.length: " + vis_armors_red.Count + "\nvis_armors_blue.length: " + vis_armors_blue.Count);
-    // }
-
-    // void OnBecameInvisible() {
-    //     if (armor_color == ArmorColor.Red)
-    //         vis_armors_red.Remove(this);
-    //     else
-    //         vis_armors_blue.Remove(this);
-    //     // Debug.Log("Remove armor: " + this);
-    //     // Debug.Log("vis_armors_red.length: " + vis_armors_red.Count + "\nvis_armors_blue.length: " + vis_armors_blue.Count);
-    // }
 }

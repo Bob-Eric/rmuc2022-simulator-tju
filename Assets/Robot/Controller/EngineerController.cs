@@ -124,8 +124,7 @@ public class EngineerController : BasicController {
             _ei.mouseY = playing ? 2 * Input.GetAxis("Mouse Y") : 0;
             _ei.dt = Time.deltaTime;
             // send to server PC to execute
-            if (NetworkClient.active)
-                CmdInput(_ei);
+            CmdInput(_ei);
             // update UI in client PC
             UpdateSelfUI();
         }
@@ -178,8 +177,6 @@ public class EngineerController : BasicController {
                 wheelColliders[i].steerAngle = (45 + 90 * i) % 360 * Mathf.Deg2Rad;
                 wheelColliders[i].brakeTorque = 5;
             }
-            Debug.Log("braking");
-            return;
         } else  // remove previous brake torque
             foreach (var wc in wheelColliders)
                 wc.brakeTorque = 0;
@@ -261,7 +258,6 @@ public class EngineerController : BasicController {
 
         hold_switch = false;
         RpcCatch(to_hold: !holding);
-        holding = !holding;
     }
     [ClientRpc]
     void RpcCatch(bool to_hold) {
@@ -272,6 +268,7 @@ public class EngineerController : BasicController {
         } else {
             cm.enabled = true;
         }
+        holding = to_hold;
     }
 
 

@@ -51,13 +51,19 @@ public class GuardState : RoboState {
     }
 
 
-    public void SetInvulLight(bool on) {
-        if (on)
-            foreach (ArmorController ac in this.acs)
+    public void SetInvulLight(bool turn_on) {
+        if (turn_on) {
+            foreach (ArmorController ac in acs)
                 ac.SetLight(AssetManager.singleton.light_purple);
-        else
-            foreach (ArmorController ac in this.acs)
+            foreach (GameObject go in blood_bars)
+                go.transform.GetChild(0).GetComponent<Renderer>().material = AssetManager.singleton.light_purple;
+        } else {
+            Material mat = armor_color == ArmorColor.Red ? AssetManager.singleton.light_red : AssetManager.singleton.light_blue;
+            foreach (ArmorController ac in acs)
                 ac.SetLight(true);
+            foreach (GameObject go in blood_bars)
+                go.transform.GetChild(0).GetComponent<Renderer>().material = mat;
+        }
     }
 
     public override void TakeDamage(GameObject hitter, GameObject armor_hit, GameObject bullet) {

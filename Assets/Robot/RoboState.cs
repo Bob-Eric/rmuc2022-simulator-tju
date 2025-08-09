@@ -217,8 +217,6 @@ public class RoboState : BasicState {
 
     protected ArmorController[] acs;
     public override void TakeDamage(GameObject hitter, GameObject armor_hit, GameObject bullet) {
-        // if (!NetworkServer.active)
-        //     return;
         /* Requirement: make sure that small bullet's name contains "17mm" && big bullet's contains "42mm" */
         int damage = bullet.name.Contains("17mm") ? 10 : 100;
         damage = Mathf.RoundToInt(damage * (hitter.GetComponent<RoboState>().B_atk + 1)
@@ -230,7 +228,7 @@ public class RoboState : BasicState {
         /* else, robot record this hit and make visual effect */
         Hit(hitter);
 
-        // Debug.Log("current blood: " + currblood);
+        Debug.Log("current blood: " + currblood);
 
         if (this.currblood <= 0) {
             // killed by ally doesnt count and ally will not get exp
@@ -245,15 +243,14 @@ public class RoboState : BasicState {
     }
 
 
-    private IEnumerator ArmorsBlink(float interval) {
+    IEnumerator ArmorsBlink(float interval) {
         foreach (ArmorController ac in acs)
             ac.SetLight(false);
         yield return new WaitForSeconds(interval);
         foreach (ArmorController ac in acs)
             /* set armors light according to robot's survival */
-            ac.SetLight(this.survival);
+            ac.SetLight(survival);
     }
-
 
 
     public virtual void GetUserPref(string pref_chas, string pref_turr) { } // { Debug.Log("RoboState.GetUserPref (virtual)"); }
