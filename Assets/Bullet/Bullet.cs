@@ -9,34 +9,35 @@ public class Bullet : MonoBehaviour {
     public GameObject hitter;
 
     Rigidbody rb;
-    int cnt_static;
-    bool f_col; // if bullet has been collided with something
+    int cnt_inactive; // counter for static or out of field
+    bool collided; // if bullet has been collided with something
     void Awake() {
         Reset();
     }
 
     void Reset() {
         rb = GetComponent<Rigidbody>();
-        cnt_static = 0;
-        f_col = false;
+        rb.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        cnt_inactive = 0;
+        collided = false;
     }
 
     void FixedUpdate() {
         Assert.IsTrue(rb != null);
 
         // simulate friction to make bullet stop
-        if (f_col) {
+        if (collided) {
             rb.velocity *= 0.99f;
             rb.angularVelocity *= 0.99f;
         }
 
-        if (rb.velocity.magnitude < 0.01f && rb.angularVelocity.magnitude < 0.01f)
-            cnt_static ++;
+        if ((rb.velocity.magnitude < 0.01f && rb.angularVelocity.magnitude < 0.01f) || !BattleField.singleton.OnField(gameObject))
+            cnt_inactive++;
         else
-            cnt_static = 0;
+            cnt_inactive = 0;
 
-        if (cnt_static >= 5 || !BattleField.singleton.OnField(gameObject)) {
-            BulletPool.singleton.RemoveBullet(this.gameObject);
+        if (cnt_inactive >= 5) {
+            BulletPool.singleton.RemoveBullet(gameObject);
             Reset();
         }
     }
@@ -52,8 +53,8 @@ public class Bullet : MonoBehaviour {
                 AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.hit_42mm, transform.position);
 
             if (NetworkServer.active)
-                ac.TakeHit(collision, this.gameObject);
+                ac.TakeHit(collision, gameObject);
         }
-        f_col = true;
+        collided = true;
     }
 }
