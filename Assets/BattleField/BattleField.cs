@@ -20,8 +20,7 @@ public class BattleField : MonoBehaviour {
     public const int width = 16;
     public const int height = 4;
     public bool had_first_blood;
-    public bool started_game { get; private set; }
-    public bool ended_game { get; private set; }
+    public bool game_started { get; private set; }
 
     /// <summary>
     /// External reference
@@ -34,14 +33,24 @@ public class BattleField : MonoBehaviour {
     public GuardState guard_red;
     public GuardState guard_blue;
     public Rune rune;
+
     /* hero engineer infantry1 infantry2 */
     public RoboState[] robo_red;
     public RoboState[] robo_blue;
-    [HideInInspector] public List<RoboState> robo_all = new List<RoboState>(); // automatically set
-    [HideInInspector] public RoboState robo_local;                             // automatically set
-    [HideInInspector] public List<BasicState> team_all = new List<BasicState>();
-
     public SyncNode sync_node;
+
+    public List<Renderer> lightbars_blue_outpost;
+    public List<Renderer> lightbars_blue_guard;
+    public List<Renderer> lightbars_red_outpost;
+    public List<Renderer> lightbars_red_guard;
+
+    /// <summary>
+    /// Automatically set
+    /// </summary>
+    public List<RoboState> robo_all = new();
+    public List<BasicState> team_all = new();
+    public RoboState robo_local;
+
 
     /* priority (with NetworkIdentity): Instantiate > Awake() > OnStartServer() (obviously, iff in server PC) 
         ----Spawn----> OnStartClient() (obviously, iff in client PC) > Start()    
@@ -50,7 +59,7 @@ public class BattleField : MonoBehaviour {
         if (singleton == null) {
             singleton = this;
         } else
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         robo_all.AddRange(robo_red);
         robo_all.AddRange(robo_blue);
 
@@ -67,22 +76,22 @@ public class BattleField : MonoBehaviour {
     }
 
 
-    void Update() {
-        t_bat += Time.deltaTime;
-        if (this.GetBattleTime() > 420f || !base_blue.survival || !base_red.survival)
-            this.EndGame();
+    void FixedUpdate() {
+        t_bat += Time.fixedDeltaTime;
+        if (GetBattleTime() > 420f || !base_blue.survival || !base_red.survival)
+            EndGame();
     }
 
 
     // reset game params, such as money, started_game, etc; score won't be reset
     void ResetParam() {
-        this.money_red = 0;
-        this.money_red_max = 0;
-        this.money_blue = 0;
-        this.money_blue_max = 0;
-        this.had_first_blood = false;
-        this.started_game = false;
-        this.ended_game = false;
+        money_red = 0;
+        money_red_max = 0;
+        money_blue = 0;
+        money_blue_max = 0;
+        had_first_blood = false;
+        game_started = false;
+        game_ending = false;
     }
 
 
@@ -114,15 +123,17 @@ public class BattleField : MonoBehaviour {
         AssetManager.singleton.PlayClipAround(AssetManager.singleton.gamebg, true, 0.3f);
         AllAddMoney(200);
         StartCoroutine(DistribMoney());
-        this.started_game = true;
+        game_started = true;
     }
 
 
     [Header("draw-redwin-bluewin")]
     [SerializeField] Animator[] anims_win;
+    bool game_ending;
     public void EndGame() {
-        if (this.ended_game)
+        if (game_ending)
             return;
+        game_ending = true;
 
         int rlt = 0; // 0: draw; 1: red win; 2: blue win
         int[] blood_diff = new int[3] {outpost_red.currblood - outpost_blue.currblood,
@@ -139,8 +150,10 @@ public class BattleField : MonoBehaviour {
             anims_win[rlt].gameObject.SetActive(true);
         }
 
+        AssetManager.singleton.StopClip(AssetManager.singleton.gamebg);
+        AssetManager.singleton.PlayClipAround(AssetManager.singleton.gameend, false, 0.7f);
+
         net_man.StartCoroutine(EndGameTrans());
-        this.ended_game = true;
     }
 
 
@@ -161,7 +174,7 @@ public class BattleField : MonoBehaviour {
 
 
     public RoboState GetRobot(string robot_s) {
-        RoboState tmp = this.robo_all.Find(i => i.name == robot_s);
+        RoboState tmp = robo_all.Find(i => i.name == robot_s);
         if (tmp == null) {
             // Debug.Log(robot_s + " : " + GameObject.Find(robot_s));
             tmp = GameObject.Find(robot_s).GetComponent<RoboState>();
@@ -174,69 +187,67 @@ public class BattleField : MonoBehaviour {
         const int x_half_length = 16;
         const int y_half_length = 10;
         const int z_half_length = 10;
-        Vector3 rel_pos = obj.transform.position - this.transform.position;
+        Vector3 rel_pos = obj.transform.position - transform.position;
         return Mathf.Abs(rel_pos.x) < x_half_length && Mathf.Abs(rel_pos.y) < y_half_length
             && Mathf.Abs(rel_pos.z) < z_half_length;
     }
 
 
-    Dictionary<RoboState, int> killnum = new Dictionary<RoboState, int>();
+    Dictionary<BasicState, int> killnum = new();
     public void Kill(GameObject hitter, GameObject hittee) {
         Debug.Log(hitter.name + " slays " + hittee.name);
-        if (NetworkServer.active)
-            sync_node.RpcKill(hitter.name, hittee.name);
-        if (!NetworkClient.active)
-            return;
+
+        BasicState hittee_state = hittee.GetComponent<BasicState>();
 
         /* a team's base is lost and game ends */
-        if (hittee.GetComponent<BaseState>() != null) {
+        if (hittee_state is BaseState) {
             EndGame();
             return;
         }
 
-        BaseState bs = hittee.GetComponent<BasicState>().armor_color == ArmorColor.Blue ? base_blue : base_red;
-        GuardState gs = hittee.GetComponent<BasicState>().armor_color == ArmorColor.Blue ? guard_blue : guard_red;
+        bool is_red = hittee_state.armor_color == ArmorColor.Red;
+        BaseState bs = is_red ? base_red : base_blue;
+        GuardState gs = is_red ? guard_red : guard_blue;
         /* a team's outpost is lost and its base becomes vulnerable */
-        if (hittee.GetComponent<OutpostState>() != null) {
+        if (hittee_state is OutpostState) {
             gs.invul = false;
             gs.SetInvulLight(false);
             bs.invul = false;
             bs.SetInvulLight(false);
             bs.shield = 500;
+            foreach (Renderer ren in is_red ? lightbars_red_outpost : lightbars_blue_outpost)
+                ren.material = AssetManager.singleton.light_off;
         }
         /* a team's guard is lost and its base opens shells */
-        if (hittee.GetComponent<GuardState>() != null) {
+        if (hittee_state is GuardState) {
             bs.GetComponent<Base>().OpenShells(true);
-            bs = gs.armor_color == ArmorColor.Red ? base_red : base_blue;
             bs.shield = 0;
+            foreach (Renderer ren in is_red ? lightbars_red_guard : lightbars_blue_guard)
+                ren.material = AssetManager.singleton.light_off;
         }
 
-        RoboState rs1 = hitter.GetComponent<RoboState>();
-        BasicState rs2 = hittee.GetComponent<BasicState>();
-        AudioClip ac = null;
-        if (rs2 != null) {
-            // teammate's killed
-            if (rs2.armor_color == robo_local.armor_color) {
-                if (rs2 == robo_local) {
-                    AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.robo_die, robo_local.transform.position);
-                    ac = AssetManager.singleton.self_die;
-                } else
-                    ac = AssetManager.singleton.ally_die;
-            }
-            // enemy's killed but not by teammate
-            else if (rs1.armor_color != robo_local.armor_color)
-                ac = AssetManager.singleton.kill[0];
-            // enemy's killed by teammate
-            else {
-                if (!killnum.ContainsKey(rs1))
-                    killnum.Add(rs1, 0);
-                else
-                    killnum[rs1]++;
-                int idx = killnum[rs1] % AssetManager.singleton.kill.Length;
-                ac = AssetManager.singleton.kill[idx];
-            }
-        } else
-            Debug.Log("cannot get basicstate from hitter");
+        BasicState hitter_state = hitter.GetComponent<BasicState>();
+        AudioClip ac;
+        // teammate's killed
+        if (hittee_state.armor_color == robo_local.armor_color) {
+            if (hittee_state == robo_local) {
+                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.robo_die, robo_local.transform.position);
+                ac = AssetManager.singleton.self_die;
+            } else
+                ac = AssetManager.singleton.ally_die;
+        }
+        // enemy's killed but not by teammate
+        else if (hitter_state.armor_color != robo_local.armor_color)
+            ac = AssetManager.singleton.kill[0];
+        // enemy's killed by teammate
+        else {
+            if (!killnum.ContainsKey(hitter_state))
+                killnum.Add(hitter_state, 0);
+            else
+                killnum[hitter_state]++;
+            int idx = killnum[hitter_state] % AssetManager.singleton.kill.Length;
+            ac = AssetManager.singleton.kill[idx];
+        }
         AssetManager.singleton.PlayClipAround(ac);
         bat_ui.brdcst.EnqueueKill(hitter, hittee);
     }
@@ -281,24 +292,24 @@ public class BattleField : MonoBehaviour {
     BatSync tmp = new BatSync();
     public BatSync Pull() {
         tmp.time_bat = GetBattleTime();
-        tmp.money_red = this.money_red;
-        tmp.money_red_max = this.money_red_max;
-        tmp.money_blue = this.money_blue;
-        tmp.money_blue_max = this.money_blue_max;
-        tmp.score_red = this.score_red;
-        tmp.score_blue = this.score_blue;
+        tmp.money_red = money_red;
+        tmp.money_red_max = money_red_max;
+        tmp.money_blue = money_blue;
+        tmp.money_blue_max = money_blue_max;
+        tmp.score_red = score_red;
+        tmp.score_blue = score_blue;
         return tmp;
     }
 
 
     public void Push(BatSync tmp) {
-        this.t_bat = tmp.time_bat;
-        this.money_red = tmp.money_red;
-        this.money_red_max = tmp.money_red_max;
-        this.money_blue = tmp.money_blue;
-        this.money_blue_max = tmp.money_blue_max;
-        this.score_red = tmp.score_red;
-        this.score_blue = tmp.score_blue;
+        t_bat = tmp.time_bat;
+        money_red = tmp.money_red;
+        money_red_max = tmp.money_red_max;
+        money_blue = tmp.money_blue;
+        money_blue_max = tmp.money_blue_max;
+        score_red = tmp.score_red;
+        score_blue = tmp.score_blue;
     }
 
 

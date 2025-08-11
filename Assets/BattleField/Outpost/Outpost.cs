@@ -15,7 +15,7 @@ public class Outpost : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        if (!NetworkServer.active || !BattleField.singleton.started_game)
+        if (!NetworkServer.active || !BattleField.singleton.game_started)
             return;
         // By rules, outpost's armors will rotate if and only if 
         //     1. outpost is survival and not invulnerable

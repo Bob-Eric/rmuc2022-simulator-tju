@@ -74,7 +74,7 @@ public class EngineerState : RoboState {
     public override void Update() {
         base.Update();
 
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         timer_hit += Time.deltaTime;

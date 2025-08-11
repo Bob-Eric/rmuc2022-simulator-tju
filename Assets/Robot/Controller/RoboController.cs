@@ -396,7 +396,7 @@ public class RoboController : BasicController {
 
 
     void GuardShoot() {
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         if (targ_avail && BattleField.singleton.GetBattleTime() - last_fire > 0.3f) {
@@ -409,7 +409,7 @@ public class RoboController : BasicController {
     float last_fire;
     bool firing;
     void Shoot() {
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         if (firing && BattleField.singleton.GetBattleTime() - last_fire > 0.15f) {

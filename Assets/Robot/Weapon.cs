@@ -31,10 +31,10 @@ public class Weapon : MonoBehaviour {
             bullnum--;
             GainHeat();
             if (this.caliber == Caliber._17mm) {
-                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton._17mm, transform.position);
+                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.shoot_17mm, transform.position, 0.5f);
                 return BulletPool.singleton.GetSmallBullet();
             } else {
-                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton._42mm, transform.position);
+                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.shoot_42mm, transform.position, 0.5f);
                 if (robot.GetComponent<HeroState>().sniping) {  // hero snipe bonus
                     if (robot.armor_color == ArmorColor.Red)
                         BattleField.singleton.money_red += 10;

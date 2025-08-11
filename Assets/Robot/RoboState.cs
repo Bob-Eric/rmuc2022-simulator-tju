@@ -40,8 +40,8 @@ public class RoboState : BasicState {
     */
     public List<float> li_B_atk; // e.g. rune_junior => B_atk.Add(0.5); rune_senior => B_atd.Add(1)
     public List<float> li_B_dfc; // e.g. rune_senior => B_dfc.Add(0.5)
-    public List<float> li_B_cd;  
-    public List<float> li_B_rev; 
+    public List<float> li_B_cd;
+    public List<float> li_B_rev;
     public List<int> li_B_rbn;
 
 
@@ -51,13 +51,13 @@ public class RoboState : BasicState {
     /// </summary>
     RoboSync tmp = new RoboSync();
     public virtual RoboSync Pull() {
-        tmp.currblood = this.currblood;
-        tmp.maxblood = this.maxblood;
-        if (!this.survival)
+        tmp.currblood = currblood;
+        tmp.maxblood = maxblood;
+        if (!survival)
             tmp.bat_stat = BatStat.Dead;
-        else if (Mathf.Approximately(this.B_dfc, 1))
+        else if (Mathf.Approximately(B_dfc, 1))
             tmp.bat_stat = BatStat.Invulnerable;
-        else if (!Mathf.Approximately(this.B_dfc, 0))
+        else if (!Mathf.Approximately(B_dfc, 0))
             tmp.bat_stat = BatStat.Defensive;
         else
             tmp.bat_stat = BatStat.Survival;
@@ -69,19 +69,19 @@ public class RoboState : BasicState {
     /// Update this robot state with the sync data from server PC. Called by syncnode in client PC only.
     /// </summary>
     public virtual void Push(RoboSync robo_sync) {
-        if (!this.survival && robo_sync.bat_stat != BatStat.Dead) {
-            Debug.Log(string.Format("{0} reborns", this.gameObject.name));
+        if (!survival && robo_sync.bat_stat != BatStat.Dead) {
+            Debug.Log(string.Format("{0} reborns", gameObject.name));
             foreach (ArmorController ac in acs)
                 ac.Enable();
         }
-        if (this.currblood != robo_sync.currblood || this.maxblood != robo_sync.maxblood) {
-            this.currblood = robo_sync.currblood;
-            this.maxblood = robo_sync.maxblood;
+        if (currblood != robo_sync.currblood || maxblood != robo_sync.maxblood) {
+            currblood = robo_sync.currblood;
+            maxblood = robo_sync.maxblood;
             SetBloodBars();
             if (robo_sync.bat_stat == BatStat.Dead)
                 Die();
         }
-        this.survival = robo_sync.bat_stat != BatStat.Dead;
+        survival = robo_sync.bat_stat != BatStat.Dead;
         return;
     }
 
@@ -98,12 +98,12 @@ public class RoboState : BasicState {
 
 
     public virtual void Die() {
-        Debug.Log(this.gameObject.name + " dies");
-        this.currblood = 0;
+        Debug.Log(gameObject.name + " dies");
+        currblood = 0;
         SetBloodBars();
-        this.rbn_req += 10;
+        rbn_req += 10;
 
-        this.survival = false;
+        survival = false;
         foreach (ArmorController ac in acs)
             ac.Disable();
 
@@ -130,8 +130,8 @@ public class RoboState : BasicState {
     /// non-API
     /// </summary>
     public virtual void Awake() {
-        this.acs = GetComponentsInChildren<ArmorController>();
-        this.rigid = GetComponentInChildren<Rigidbody>();
+        acs = GetComponentsInChildren<ArmorController>();
+        rigid = GetComponentInChildren<Rigidbody>();
     }
 
 
@@ -146,13 +146,13 @@ public class RoboState : BasicState {
 
         Configure();
 
-        this.currblood = this.maxblood;
+        currblood = maxblood;
         SetBloodBars();
     }
 
 
     public virtual void Update() {
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         if (NetworkServer.active)
@@ -190,26 +190,26 @@ public class RoboState : BasicState {
     protected virtual void Reset() {
         rbn = 0;
         /* by rule, recover currblood to 20% */
-        this.currblood = maxblood / 5;
+        currblood = maxblood / 5;
         SetBloodBars();
-        this.survival = true;
+        survival = true;
         /* set host's visual effect */
-        Debug.Log(string.Format("{0} reborns", this.gameObject.name));
+        Debug.Log(string.Format("{0} reborns", gameObject.name));
         foreach (ArmorController ac in acs)
             ac.Enable();
         SetBloodBars();
-        StartCoroutine(this.Reborn());
+        StartCoroutine(Reborn());
     }
 
 
     IEnumerator Reborn() {
         /* delay 10 sec invincible */
-        this.li_B_dfc.Add(1);
+        li_B_dfc.Add(1);
         UpdateBuff();
         yield return new WaitForSeconds(10);
 
         /* cancel invincible buff */
-        this.li_B_dfc.Remove(1);
+        li_B_dfc.Remove(1);
         UpdateBuff();
         yield break;
     }
@@ -217,29 +217,31 @@ public class RoboState : BasicState {
 
     protected ArmorController[] acs;
     public override void TakeDamage(GameObject hitter, GameObject armor_hit, GameObject bullet) {
-        /* Requirement: make sure that small bullet's name contains "17mm" && big bullet's contains "42mm" */
+        /* Assume that small bullet's name contains "17mm" && big bullet's contains "42mm" */
         int damage = bullet.name.Contains("17mm") ? 10 : 100;
         damage = Mathf.RoundToInt(damage * (hitter.GetComponent<RoboState>().B_atk + 1)
-            * Mathf.Max(1 - this.GetComponent<RoboState>().B_dfc, 0));
+            * Mathf.Max(1 - GetComponent<RoboState>().B_dfc, 0));
         currblood -= damage;
         /* if robot is invulnerable, there's no armorsblink or setbloodbar */
         if (damage == 0)
             return;
-        /* else, robot record this hit and make visual effect */
-        Hit(hitter);
 
+        StartCoroutine(ArmorsBlink(0.1f));
         Debug.Log("current blood: " + currblood);
 
-        if (this.currblood <= 0) {
-            // killed by ally doesnt count and ally will not get exp
-            this.killed = hitter.GetComponent<BasicState>().armor_color != armor_color;
-            this.killer = hitter;
-            Die();
-            BattleField.singleton.Kill(hitter, this.gameObject);
-        } else
-            StartCoroutine(ArmorsBlink(0.1f));
-
-        // SetBloodBars();
+        /* exp, blood will be sync-ed, so it's okay to omit them on client PC */
+        if (NetworkServer.active) {
+            // record hit => exp stuff
+            RecordHit(hitter);
+            // damage => killing
+            if (currblood <= 0) {
+                // killed by ally doesnt count and ally will not get exp
+                killed = hitter.GetComponent<BasicState>().armor_color != armor_color;
+                killer = hitter;
+                Die();
+                BattleField.singleton.sync_node.RpcKill(hitter.name, name);
+            }
+        }
     }
 
 

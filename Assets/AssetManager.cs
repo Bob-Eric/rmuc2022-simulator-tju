@@ -12,6 +12,7 @@ public class AssetManager : MonoBehaviour {
     public Material light_red;
     public Material light_blue;
     public Material light_purple;
+    public Material light_white;
     public Material light_off;
 
     public TextAsset f_infantry_chassis;
@@ -27,8 +28,8 @@ public class AssetManager : MonoBehaviour {
     public GameObject Speaker;
     /* bullet-related */
     [Header("bullet-related")]
-    public AudioClip _17mm;
-    public AudioClip _42mm;
+    public AudioClip shoot_17mm;
+    public AudioClip shoot_42mm;
     public AudioClip hit_17mm;
     public AudioClip hit_42mm;
 
@@ -38,7 +39,7 @@ public class AssetManager : MonoBehaviour {
     public AudioClip checking;
     public AudioClip cntdown;
     public AudioClip gamebg;
-    public AudioClip gamefin;
+    public AudioClip gameend;
 
     /* broadcast */
     [Header("broadcast")]
@@ -75,7 +76,7 @@ public class AssetManager : MonoBehaviour {
     /// </summary>
 
     /* audioclip that is played at point is short, therefore not changing volume while playing */
-    public void PlayClipAtPoint(AudioClip ac, Vector3 pos) => AudioSource.PlayClipAtPoint(ac, pos);
+    public void PlayClipAtPoint(AudioClip ac, Vector3 pos, float volume = 1f) => AudioSource.PlayClipAtPoint(ac, pos, volume);
 
 
     public void PlayClipAround(AudioClip ac, bool loop = false, float volume = 1f) {
@@ -101,12 +102,9 @@ public class AssetManager : MonoBehaviour {
 
     public void StopClip(AudioClip ac) {
         AudioSource[] src = Speaker.GetComponents<AudioSource>();
-        foreach (AudioSource aud in src) {
-            if (aud.clip == ac) {
+        foreach (AudioSource aud in src)
+            if (aud.clip == ac)
                 aud.Stop();
-                Debug.Log(aud.name + " stops");
-            }
-        }
     }
 
 

@@ -48,9 +48,9 @@ public class Bullet : MonoBehaviour {
         ArmorController ac = collision.collider.GetComponent<ArmorController>();
         if (ac != null) {
             if (gameObject.name.ToLower().Contains("17mm"))
-                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.hit_17mm, transform.position);
+                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.hit_17mm, transform.position, 0.5f);
             else
-                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.hit_42mm, transform.position);
+                AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.hit_42mm, transform.position, 0.5f);
 
             ac.TakeHit(collision, gameObject); // calc damage and armor blink
         }

@@ -71,7 +71,7 @@ public class InfantryState : RoboState {
     public override void Update() {
         base.Update();
 
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         GetExp();

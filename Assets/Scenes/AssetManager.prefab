@@ -48,24 +48,25 @@ MonoBehaviour:
   light_red: {fileID: 2100000, guid: 292d767a6d03f8049b825e67eabb87e6, type: 2}
   light_blue: {fileID: 2100000, guid: 38ac1cbe3dda0b548a69bdb2b6119e4d, type: 2}
   light_purple: {fileID: 2100000, guid: acb9a568f3178f54da80507db0189ba6, type: 2}
+  light_white: {fileID: 2100000, guid: 15a81680860a959458177d47f698a64a, type: 2}
   light_off: {fileID: 2100000, guid: 42ba9babb44014a4bbca8cfe0883128d, type: 2}
   f_infantry_chassis: {fileID: 4900000, guid: dc86631ca1558b14a98668a86d5ec687, type: 3}
   f_hero_chassis: {fileID: 4900000, guid: 7af84c1d61e6a354bb229c8e07f8f388, type: 3}
   f_weapon: {fileID: 4900000, guid: 8a8cc27267bb0b84a81855c8adfd13b7, type: 3}
   f_experience: {fileID: 4900000, guid: 1954706f30d3c014897a29abbede1ae6, type: 3}
   Speaker: {fileID: 6983841004723753676}
-  _17mm: {fileID: 8300000, guid: b385cdff677de3f4ab8ad9decf7c5a0f, type: 3}
-  _42mm: {fileID: 8300000, guid: 4582a228a48dd7349a51e2800bc31f48, type: 3}
-  hit_17mm: {fileID: 8300000, guid: e75898c9aab969f47bee1a53f5806632, type: 3}
-  hit_42mm: {fileID: 8300000, guid: e526cf9a69157c245a4f24e0d4622470, type: 3}
+  shoot_17mm: {fileID: 8300000, guid: b385cdff677de3f4ab8ad9decf7c5a0f, type: 3}
+  shoot_42mm: {fileID: 8300000, guid: 4582a228a48dd7349a51e2800bc31f48, type: 3}
+  hit_17mm: {fileID: 8300000, guid: a6af6cb3b866f754098bf94a3287322e, type: 3}
+  hit_42mm: {fileID: 8300000, guid: 2dfc11a8c5c336e4d87d92e9951a1e3c, type: 3}
   prepare: {fileID: 8300000, guid: c2d62394f45b1db41bd577cda9b5b180, type: 3}
   checking: {fileID: 8300000, guid: 20de69629437e7046a24da372a82a7b4, type: 3}
   cntdown: {fileID: 8300000, guid: be97c45cebdd76e47b04e3465a2f5a62, type: 3}
   gamebg: {fileID: 8300000, guid: c3ccabe698a166c45b8390aaebfe9482, type: 3}
-  gamefin: {fileID: 8300000, guid: 7062340886599f54aaeecdd46ef09e76, type: 3}
+  gameend: {fileID: 8300000, guid: 7062340886599f54aaeecdd46ef09e76, type: 3}
   ally_die: {fileID: 8300000, guid: 8d6857162e4e5954da38faef93e2d505, type: 3}
   self_die: {fileID: 8300000, guid: 59c6b4e2e98ea904fbc26173861577d8, type: 3}
-  frst_bld: {fileID: 8300000, guid: 30776eede50eca149865e589f7aea11e, type: 3}
+  frst_bld: {fileID: 8300000, guid: fdc125927bb0fa44abd166f9da6b6577, type: 3}
   kill:
   - {fileID: 8300000, guid: 63c905e9e468b104bbd18ec4ae5c9cee, type: 3}
   - {fileID: 8300000, guid: 718183ccb1d642443969eb58f7aaa22a, type: 3}

@@ -28,7 +28,7 @@ public abstract class Buff {
         // check en to avoid multiple times of adding buff
         if (!en) {
             robot.robo_buff.Add(this);
-            AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.buff_taken, robot.transform.position);
+            AssetManager.singleton.PlayClipAtPoint(AssetManager.singleton.buff_taken, robot.transform.position, volume: 0.5f);
         }
         col = collider;
         timer = 2;

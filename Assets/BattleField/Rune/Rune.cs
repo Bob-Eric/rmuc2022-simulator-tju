@@ -58,7 +58,7 @@ public class Rune : MonoBehaviour {
     bool[] dropped = new bool[] { false, false, false };
     float t_bat => BattleField.singleton.GetBattleTime();
     void Update() {
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         if (t_bat > mine_1_3 - 2 && !dropped[0]) {

@@ -135,13 +135,10 @@ public class SyncNode : NetworkBehaviour {
 
     [ClientRpc]
     public void RpcKill(string hitter_s, string hittee_s) {
-        if (NetworkServer.active)
-            return;
-
         BasicState hitter = BattleField.singleton.team_all.Find(i => i.name == hitter_s);
         BasicState hittee = BattleField.singleton.team_all.Find(i => i.name == hittee_s);
         if (hitter == null || hittee == null)
-            Debug.Log("Cannot find hitter or hittee! hitter's name: " + hitter_s + "; hittee's name: " + hittee_s);
+            Debug.LogError("Cannot find hitter or hittee! hitter's name: " + hitter_s + "; hittee's name: " + hittee_s);
 
         BattleField.singleton.Kill(hitter.gameObject, hittee.gameObject);
     }

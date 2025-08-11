@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class XchgSpot : MonoBehaviour {
@@ -13,14 +14,21 @@ public class XchgSpot : MonoBehaviour {
     readonly Vector3 collSize = new Vector3(0.8f, 1f, 0.5f);        // detection region's (a box area) extent 
 
 
+    List<Material> det_materials;
+    List<Renderer> coll_lightbars;
+    void Awake() {
+        det_materials = new(det_light.GetComponentsInChildren<Renderer>().Select(ren => ren.material));
+        coll_lightbars = new(coll_light.GetComponentsInChildren<Renderer>());
+    }
+
     const string used_s = "used";
     float t_last = -3f;
-    void Update() {
-        if (!BattleField.singleton.started_game)
+    void FixedUpdate() {
+        if (!BattleField.singleton.game_started)
             return;
         // calling Physics.Overlapxxx is efficient to detect collide
-        Collider[] cols = Physics.OverlapBox(this.transform.TransformPoint(detCent), 0.5f * detSize, this.transform.rotation);
-        // Debug.DrawRay(this.transform.TransformPoint(detCent), Vector3.up, Color.red);
+        Collider[] cols = Physics.OverlapBox(transform.TransformPoint(detCent), 0.5f * detSize, transform.rotation);
+        // Debug.DrawRay(transform.TransformPoint(detCent), Vector3.up, Color.red);
         foreach (Collider col in cols) {
             if (col.name.Contains(CatchMine.mine_s) && !col.name.Contains(used_s)) {
                 col.name += used_s;
@@ -30,13 +38,13 @@ public class XchgSpot : MonoBehaviour {
             }
         }
 
-        cols = Physics.OverlapBox(this.transform.TransformPoint(collCent), 0.5f * collSize, this.transform.rotation);
-        // Debug.DrawRay(this.transform.TransformPoint(collCent), Vector3.up, Color.green);
+        cols = Physics.OverlapBox(transform.TransformPoint(collCent), 0.5f * collSize, transform.rotation);
+        // Debug.DrawRay(transform.TransformPoint(collCent), Vector3.up, Color.green);
         foreach (Collider col in cols) {
             if (col.name.Contains(CatchMine.mine_s)) {
                 if (BattleField.singleton.GetBattleTime() - t_last < 3f) {
                     BattleField.singleton.XchgMine(armor_color, col.name.Contains("gold"));
-                    Debug.Log($"xchg a {(col.name.Contains("gold")?"gold":"normal")} mine successfully.");
+                    Debug.Log($"xchg a {(col.name.Contains("gold") ? "gold" : "normal")} mine successfully.");
                     StartCoroutine(CollLightBlink());
                 } else
                     Debug.Log("xchg too late");
@@ -48,9 +56,9 @@ public class XchgSpot : MonoBehaviour {
     readonly WaitForSeconds _wait = new(0.1f);
     IEnumerator DetLightBlink() {
         for (int i = 0; i < 15; i++) {
-            det_light.SetActive(false);
+            det_materials.ForEach(mat => mat.DisableKeyword("_EMISSION"));
             yield return _wait;
-            det_light.SetActive(true);
+            det_materials.ForEach(mat => mat.EnableKeyword("_EMISSION"));
             yield return _wait;
         }
     }
@@ -58,9 +66,9 @@ public class XchgSpot : MonoBehaviour {
 
     IEnumerator CollLightBlink() {
         for (int i = 0; i < 10; i++) {
-            coll_light.SetActive(false);
+            coll_lightbars.ForEach(ren => ren.material = AssetManager.singleton.light_off);
             yield return _wait;
-            coll_light.SetActive(true);
+            coll_lightbars.ForEach(ren => ren.material = AssetManager.singleton.light_white);
             yield return _wait;
         }
     }

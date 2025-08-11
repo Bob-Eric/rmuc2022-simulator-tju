@@ -82,7 +82,7 @@ public class DroneController : BasicController {
 
     DroneInput _di = new();
     void Update() {
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
 
         if (isOwned) {
@@ -123,7 +123,7 @@ public class DroneController : BasicController {
     public override void FixedUpdate() {
         base.FixedUpdate();
 
-        if (!BattleField.singleton.started_game)
+        if (!BattleField.singleton.game_started)
             return;
         PaddleSpin();
 
